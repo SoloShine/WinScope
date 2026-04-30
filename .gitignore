@@ -28,3 +28,6 @@ src-tauri/target/
 /test-results/
 /playwright-report/
 /playwright/.cache/
+
+# Claude Code local settings
+.claude/settings.local.json
