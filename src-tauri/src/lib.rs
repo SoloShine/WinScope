@@ -8,7 +8,9 @@ use std::sync::Mutex;
 use std::time::Duration;
 use tauri::{Emitter, Manager, State};
 use ::windows::Win32::Foundation::HWND;
-use ::windows::Win32::UI::WindowsAndMessaging::SetForegroundWindow;
+use ::windows::Win32::UI::WindowsAndMessaging::{
+    BringWindowToTop, IsIconic, SetForegroundWindow, ShowWindow, SW_RESTORE,
+};
 use windows_capture::capture::GraphicsCaptureApiHandler;
 use windows_capture::settings::{
     ColorFormat, CursorCaptureSettings, DirtyRegionSettings, DrawBorderSettings,
@@ -125,6 +127,11 @@ fn bring_to_front(window_title: String) -> Result<(), String> {
 
     let hwnd = HWND(win.as_raw_hwnd());
     unsafe {
+        // Restore if minimized
+        if IsIconic(hwnd).as_bool() {
+            let _ = ShowWindow(hwnd, SW_RESTORE);
+        }
+        let _ = BringWindowToTop(hwnd);
         let result = SetForegroundWindow(hwnd);
         if !result.as_bool() {
             return Err("SetForegroundWindow failed".to_string());
