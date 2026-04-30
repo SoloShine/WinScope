@@ -90,11 +90,17 @@ async function setupTauriMock(page: Page, options: MockOptions = {}) {
   );
 }
 
-export const test = base.extend<{ mockTauri: MockOptions }>({
-  mockTauri: [
-    async ({ page }, use) => {
-      await setupTauriMock(page);
-      await use({});
+type Fixtures = { mockTauri: MockOptions; _setupMock: void };
+
+export const test = base.extend<Fixtures>({
+  // Option: can be overridden via test.use({ mockTauri: { config: {...} } })
+  mockTauri: [{}, { option: true }],
+
+  // Auto-fixture that sets up the Tauri mock using the option value
+  _setupMock: [
+    async ({ page, mockTauri }, use) => {
+      await setupTauriMock(page, mockTauri);
+      await use();
     },
     { auto: true },
   ],
