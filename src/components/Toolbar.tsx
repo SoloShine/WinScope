@@ -49,6 +49,7 @@ export function Toolbar({ paused, setPaused, config, onUpdateConfig, onToggleSet
     <div className="flex items-center gap-3 px-4 py-2 bg-surface-alt border-b border-border">
       <button
         onClick={toggleAlwaysOnTop}
+        title={t("toolbar.pin.hint")}
         className={`flex items-center gap-1 px-2 py-1 rounded text-sm transition-colors ${
           config.always_on_top ? "bg-blue-600 text-white" : "text-content-muted hover:text-content hover:bg-surface"
         }`}
@@ -59,6 +60,7 @@ export function Toolbar({ paused, setPaused, config, onUpdateConfig, onToggleSet
 
       <button
         onClick={() => setPaused(!paused)}
+        title={paused ? t("toolbar.resume.hint") : t("toolbar.pause.hint")}
         className={`flex items-center gap-1 px-2 py-1 rounded text-sm transition-colors ${
           paused ? "bg-yellow-600 text-white" : "text-content-muted hover:text-content hover:bg-surface"
         }`}
@@ -102,7 +104,7 @@ export function Toolbar({ paused, setPaused, config, onUpdateConfig, onToggleSet
         {t("toolbar.lang")}
       </button>
 
-      <button onClick={onToggleSettings} className="text-content-muted hover:text-content transition-colors" title={t("toolbar.settings")}>
+      <button onClick={onToggleSettings} className="text-content-muted hover:text-content transition-colors" title={t("toolbar.settings.hint")}>
         <Settings size={18} />
       </button>
     </div>

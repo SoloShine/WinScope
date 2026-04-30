@@ -22,5 +22,9 @@
   "interval.1s": "1s",
   "interval.1.5s": "1.5s",
   "interval.2s": "2s",
-  "interval.3s": "3s"
+  "interval.3s": "3s",
+  "toolbar.pin.hint": "Pin (Ctrl+P)",
+  "toolbar.pause.hint": "Pause (Space)",
+  "toolbar.resume.hint": "Resume (Space)",
+  "toolbar.settings.hint": "Window Filter (Ctrl+G)"
 }

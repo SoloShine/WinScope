@@ -22,5 +22,9 @@
   "interval.1s": "1秒",
   "interval.1.5s": "1.5秒",
   "interval.2s": "2秒",
-  "interval.3s": "3秒"
+  "interval.3s": "3秒",
+  "toolbar.pin.hint": "置顶 (Ctrl+P)",
+  "toolbar.pause.hint": "暂停 (Space)",
+  "toolbar.resume.hint": "继续 (Space)",
+  "toolbar.settings.hint": "窗口筛选 (Ctrl+G)"
 }
