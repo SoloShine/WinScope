@@ -1,14 +1,15 @@
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 import type { WindowInfo } from "../types";
 import { WindowCard } from "./WindowCard";
 import { useTranslation } from "../i18n/index.tsx";
 
-const MIN_WIDTH = 120;
-const MAX_WIDTH = 720;
-const ZOOM_STEP = 30;
+export const MIN_WIDTH = 120;
+export const MAX_WIDTH = 720;
+export const ZOOM_STEP = 30;
+export const DEFAULT_WIDTH = 260;
 const STORAGE_KEY = "winscope-card-width";
 
-function getSavedWidth(): number {
+export function getSavedWidth(): number {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -16,7 +17,7 @@ function getSavedWidth(): number {
       if (n >= MIN_WIDTH && n <= MAX_WIDTH) return n;
     }
   } catch {}
-  return 260;
+  return DEFAULT_WIDTH;
 }
 
 interface WindowGridProps {
@@ -24,6 +25,8 @@ interface WindowGridProps {
   captures: Map<string, string>;
   activeCaptures: Set<string>;
   hiddenWindows: string[];
+  cardWidth: number;
+  setCardWidth: (width: number) => void;
   onBringToFront: (title: string) => void;
 }
 
@@ -32,26 +35,26 @@ export function WindowGrid({
   captures,
   activeCaptures,
   hiddenWindows,
+  cardWidth,
+  setCardWidth,
   onBringToFront,
 }: WindowGridProps) {
   const { t } = useTranslation();
-  const [cardWidth, setCardWidth] = useState(getSavedWidth);
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
     if (e.ctrlKey || e.metaKey) {
       e.preventDefault();
-      setCardWidth((prev) => {
-        const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
-        const next = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, prev + delta));
-        if (next !== prev) {
-          try {
-            localStorage.setItem(STORAGE_KEY, String(next));
-          } catch {}
-        }
-        return next;
-      });
+      setCardWidth(
+        Math.max(
+          MIN_WIDTH,
+          Math.min(
+            MAX_WIDTH,
+            cardWidth + (e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP)
+          )
+        )
+      );
     }
-  }, []);
+  }, [cardWidth, setCardWidth]);
 
   const visibleWindows = windows.filter(
     (w) =>
