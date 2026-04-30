@@ -96,12 +96,14 @@ npx tauri build      # 生产构建 (输出 exe)
 | `Ctrl+P` | 切换窗口置顶 | 游戏监控常用 |
 | `Ctrl+G` | 开关设置面板 | 代替点击齿轮 |
 | `Escape` | 关闭设置面板 | 仅面板打开时生效 |
-| `Ctrl+=` | 放大缩略图 | 复用滚轮缩放逻辑 |
-| `Ctrl+-` | 缩小缩略图 | 同上 |
-| `Ctrl+0` | 重置缩放(260px) | 快速恢复默认 |
-| `F11` | 切换全屏 | 最大化监控区域 |
+| `Ctrl+Shift+=` | 放大缩略图 | WebView2 拦截 Ctrl+=，改用 Shift 组合 |
+| `Ctrl+Shift+-` | 缩小缩略图 | 同上 |
+| `Ctrl+Shift+0` | 重置缩放(260px) | 同上 |
+| `F11` | 切换全屏 | 需要 window:allow-set-fullscreen 权限 |
 | `Ctrl+S` | (预留) 截图保存 | 仅注册按键，后续接入 |
 | `Ctrl+F` | (预留) 窗口搜索 | 同上 |
+
+UI 按钮: 左下角全屏切换，右下角缩放(-/重置/+)。Ctrl+滚轮缩放仍可用。
 
 实现: `App.tsx` 中 `useEffect` 注册 `keydown` 监听，`cardWidth` 状态从 `WindowGrid` 提升到 `App`。仅应用内快捷键，全局热键留作后续迭代。
 
