@@ -1,3 +1,4 @@
+mod capture;
 mod windows;
 
 use windows::WindowInfo;
