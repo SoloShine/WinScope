@@ -15,6 +15,7 @@ import { useTranslation } from "./i18n/index.tsx";
 import { useTheme } from "./theme.tsx";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { Maximize, Minimize, Plus, Minus, RotateCcw } from "lucide-react";
 
 function App() {
   const capture = useCapture();
@@ -136,7 +137,7 @@ function App() {
         onUpdateConfig={capture.updateConfig}
         onToggleSettings={() => setShowSettings(!showSettings)}
       />
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
         <WindowGrid
           windows={capture.windows}
           captures={capture.captures}
@@ -157,6 +158,45 @@ function App() {
             onClose={() => setShowSettings(false)}
           />
         )}
+        {/* Floating buttons */}
+        <div className="absolute bottom-3 left-3 flex gap-1 z-20">
+          <button
+            onClick={async () => {
+              const next = !isFullscreen;
+              setIsFullscreen(next);
+              await getCurrentWebviewWindow().setFullscreen(next);
+            }}
+            className="p-1.5 rounded bg-surface-alt/80 border border-border text-content-muted hover:text-content hover:bg-surface transition-colors"
+            title={isFullscreen ? t("controls.exitFullscreen") : t("controls.fullscreen")}
+          >
+            {isFullscreen ? <Minimize size={14} /> : <Maximize size={14} />}
+          </button>
+        </div>
+        <div className="absolute bottom-3 right-3 flex gap-1 z-20">
+          <button
+            onClick={() => setCardWidth(cardWidth - ZOOM_STEP)}
+            disabled={cardWidth <= MIN_WIDTH}
+            className="p-1.5 rounded bg-surface-alt/80 border border-border text-content-muted hover:text-content hover:bg-surface transition-colors disabled:opacity-30"
+            title={t("controls.zoomOut")}
+          >
+            <Minus size={14} />
+          </button>
+          <button
+            onClick={() => setCardWidth(DEFAULT_WIDTH)}
+            className="p-1.5 rounded bg-surface-alt/80 border border-border text-content-muted hover:text-content hover:bg-surface transition-colors"
+            title={t("controls.zoomReset")}
+          >
+            <RotateCcw size={14} />
+          </button>
+          <button
+            onClick={() => setCardWidth(cardWidth + ZOOM_STEP)}
+            disabled={cardWidth >= MAX_WIDTH}
+            className="p-1.5 rounded bg-surface-alt/80 border border-border text-content-muted hover:text-content hover:bg-surface transition-colors disabled:opacity-30"
+            title={t("controls.zoomIn")}
+          >
+            <Plus size={14} />
+          </button>
+        </div>
       </div>
     </div>
   );

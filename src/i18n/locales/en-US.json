@@ -26,5 +26,10 @@
   "toolbar.pin.hint": "Pin (Ctrl+P)",
   "toolbar.pause.hint": "Pause (Space)",
   "toolbar.resume.hint": "Resume (Space)",
-  "toolbar.settings.hint": "Window Filter (Ctrl+G)"
+  "toolbar.settings.hint": "Window Filter (Ctrl+G)",
+  "controls.fullscreen": "Fullscreen",
+  "controls.exitFullscreen": "Exit Fullscreen",
+  "controls.zoomIn": "Zoom In",
+  "controls.zoomOut": "Zoom Out",
+  "controls.zoomReset": "Reset Zoom"
 }
