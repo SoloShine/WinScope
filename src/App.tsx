@@ -182,6 +182,7 @@ function App() {
         {/* Floating buttons */}
         <div className="absolute bottom-3 left-3 flex gap-1 z-20">
           <button
+            tabIndex={-1}
             onClick={async () => {
               const next = !isFullscreen;
               setIsFullscreen(next);
@@ -195,6 +196,7 @@ function App() {
         </div>
         <div className="absolute bottom-3 right-3 flex gap-1 z-20">
           <button
+            tabIndex={-1}
             onClick={() => setCardWidth((w) => w - ZOOM_STEP)}
             disabled={cardWidth <= MIN_WIDTH}
             className="p-1.5 rounded bg-surface-alt/80 border border-border text-content-muted hover:text-content hover:bg-surface transition-colors disabled:opacity-30"
@@ -203,6 +205,7 @@ function App() {
             <Minus size={14} />
           </button>
           <button
+            tabIndex={-1}
             onClick={() => setCardWidth(DEFAULT_WIDTH)}
             className="p-1.5 rounded bg-surface-alt/80 border border-border text-content-muted hover:text-content hover:bg-surface transition-colors"
             title={t("controls.zoomReset")}
@@ -210,6 +213,7 @@ function App() {
             <RotateCcw size={14} />
           </button>
           <button
+            tabIndex={-1}
             onClick={() => setCardWidth((w) => w + ZOOM_STEP)}
             disabled={cardWidth >= MAX_WIDTH}
             className="p-1.5 rounded bg-surface-alt/80 border border-border text-content-muted hover:text-content hover:bg-surface transition-colors disabled:opacity-30"

@@ -159,7 +159,6 @@ fn bring_to_front(window_title: String) -> Result<(), String> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_prevent_default::init())
         .setup(|app| {
             let config = config::load_config(app.handle());
             app.manage(AppState {
