@@ -70,22 +70,22 @@ function App() {
         return;
       }
 
-      // Ctrl+Shift+= — zoom in
-      if (e.key === "=" && (e.ctrlKey || e.metaKey) && e.shiftKey) {
+      // Ctrl+I — zoom in
+      if (e.key.toLowerCase() === "i" && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
         e.preventDefault();
         setCardWidth(cardWidth + ZOOM_STEP);
         return;
       }
 
-      // Ctrl+Shift+- — zoom out
-      if (e.key === "-" && (e.ctrlKey || e.metaKey) && e.shiftKey) {
+      // Ctrl+D — zoom out
+      if (e.key.toLowerCase() === "d" && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
         e.preventDefault();
         setCardWidth(cardWidth - ZOOM_STEP);
         return;
       }
 
-      // Ctrl+Shift+0 — reset zoom
-      if (e.key === "0" && (e.ctrlKey || e.metaKey) && e.shiftKey) {
+      // Ctrl+R — reset zoom
+      if (e.key.toLowerCase() === "r" && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
         e.preventDefault();
         setCardWidth(DEFAULT_WIDTH);
         return;

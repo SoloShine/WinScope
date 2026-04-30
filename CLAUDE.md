@@ -96,9 +96,9 @@ npx tauri build      # 生产构建 (输出 exe)
 | `Ctrl+P` | 切换窗口置顶 | 游戏监控常用 |
 | `Ctrl+G` | 开关设置面板 | 代替点击齿轮 |
 | `Escape` | 关闭设置面板 | 仅面板打开时生效 |
-| `Ctrl+Shift+=` | 放大缩略图 | WebView2 拦截 Ctrl+=，改用 Shift 组合 |
-| `Ctrl+Shift+-` | 缩小缩略图 | 同上 |
-| `Ctrl+Shift+0` | 重置缩放(260px) | 同上 |
+| `Ctrl+I` | 放大缩略图 | I = Increase |
+| `Ctrl+D` | 缩小缩略图 | D = Decrease |
+| `Ctrl+R` | 重置缩放(260px) | R = Reset |
 | `F11` | 切换全屏 | 需要 window:allow-set-fullscreen 权限 |
 | `Ctrl+S` | (预留) 截图保存 | 仅注册按键，后续接入 |
 | `Ctrl+F` | (预留) 窗口搜索 | 同上 |
