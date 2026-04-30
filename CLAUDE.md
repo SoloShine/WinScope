@@ -88,7 +88,36 @@ npx tauri build      # 生产构建 (输出 exe)
 - WinRT Capture 会在被截取窗口显示黄色边框通知（Windows 安全特性）
 - 窗口匹配用 process_name，同一进程多窗口会全部监控
 
+## 键盘快捷键
+
+| 快捷键 | 功能 | 备注 |
+|--------|------|------|
+| `Space` | 暂停/恢复截图 | 核心高频操作 |
+| `Ctrl+P` | 切换窗口置顶 | 游戏监控常用 |
+| `Ctrl+G` | 开关设置面板 | 代替点击齿轮 |
+| `Escape` | 关闭设置面板 | 仅面板打开时生效 |
+| `Ctrl+=` | 放大缩略图 | 复用滚轮缩放逻辑 |
+| `Ctrl+-` | 缩小缩略图 | 同上 |
+| `Ctrl+0` | 重置缩放(260px) | 快速恢复默认 |
+| `F11` | 切换全屏 | 最大化监控区域 |
+| `Ctrl+S` | (预留) 截图保存 | 仅注册按键，后续接入 |
+| `Ctrl+F` | (预留) 窗口搜索 | 同上 |
+
+实现: `App.tsx` 中 `useEffect` 注册 `keydown` 监听，`cardWidth` 状态从 `WindowGrid` 提升到 `App`。仅应用内快捷键，全局热键留作后续迭代。
+
+## 功能开发优先级
+
+1. ~~键盘快捷键~~ (进行中)
+2. 单窗口截图保存 — 保存缩略图为 PNG
+3. 自动监控规则 — 按进程名自动开始截取
+4. 窗口分组/标签 — 按组筛选显示
+5. 全局热键 — 系统级注册 (如 Ctrl+Shift+M)
+6. 历史缩略图时间线 — 回溯窗口状态变化
+7. 系统托盘 — 最小化到托盘
+8. 多显示器过滤 — 只监控指定屏幕
+
 ## 设计文档
 
 - [设计规范](docs/superpowers/specs/2026-04-30-window-monitor-design.md)
 - [实现计划](docs/superpowers/plans/2026-04-30-window-monitor.md)
+- [键盘快捷键设计](docs/superpowers/specs/2026-04-30-keyboard-shortcuts-design.md)

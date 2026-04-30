@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  test-frontend:
+  test-e2e:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,15 +15,19 @@ jobs:
         with:
           node-version: 20
           cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install Edge Driver
+        run: |
+          cargo install --git https://github.com/chippers/msedgedriver-tool
+          & "$HOME/.cargo/bin/msedgedriver-tool.exe"
+          $PWD.Path >> $env:GITHUB_PATH
+      - name: Install tauri-driver
+        run: cargo install tauri-driver --locked
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - run: npx playwright test
-      - uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() }}
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 30
+      - name: Build Tauri app (debug)
+        run: npx tauri build --debug --no-bundle
+      - name: Run E2E tests
+        run: cd e2e-tests && npx wdio run wdio.conf.js
 
   test-backend:
     runs-on: windows-latest
@@ -47,7 +51,7 @@ jobs:
 
   build:
     runs-on: windows-latest
-    needs: [test-frontend, test-backend, lint]
+    needs: [test-e2e, test-backend, lint]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
