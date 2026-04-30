@@ -13,6 +13,9 @@ pub fn enumerate_windows() -> Vec<WindowInfo> {
         Ok(windows) => windows
             .into_iter()
             .filter_map(|w| {
+                if !w.is_valid() {
+                    return None;
+                }
                 let title = w.title().ok()?;
                 if title.is_empty() {
                     return None;
