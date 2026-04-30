@@ -9,23 +9,18 @@ import {
   ZOOM_STEP,
 } from "./components/WindowGrid";
 
-// DEFAULT_WIDTH, ZOOM_STEP used by keyboard shortcuts (Task 2)
-void DEFAULT_WIDTH;
-void ZOOM_STEP;
 import { Toolbar } from "./components/Toolbar";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { useTranslation } from "./i18n/index.tsx";
 import { useTheme } from "./theme.tsx";
 import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 function App() {
   const capture = useCapture();
   const [showSettings, setShowSettings] = useState(false);
   const [cardWidth, setCardWidthRaw] = useState(getSavedWidth);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  // isFullscreen / setIsFullscreen used by keyboard shortcuts (Task 2)
-  void isFullscreen;
-  void setIsFullscreen;
   const { t } = useTranslation();
   const { theme } = useTheme();
 
@@ -36,6 +31,90 @@ function App() {
       localStorage.setItem("winscope-card-width", String(clamped));
     } catch {}
   };
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+
+      // Space — pause/resume
+      if (e.key === " " && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        capture.setPaused(!capture.paused);
+        return;
+      }
+
+      // Ctrl+P — toggle always-on-top
+      if (e.key.toLowerCase() === "p" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        if (capture.config) {
+          const newOnTop = !capture.config.always_on_top;
+          getCurrentWebviewWindow().setAlwaysOnTop(newOnTop);
+          capture.updateConfig({ ...capture.config, always_on_top: newOnTop });
+        }
+        return;
+      }
+
+      // Ctrl+G — toggle settings panel
+      if (e.key.toLowerCase() === "g" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        setShowSettings((prev) => !prev);
+        return;
+      }
+
+      // Escape — close settings panel
+      if (e.key === "Escape") {
+        setShowSettings(false);
+        return;
+      }
+
+      // Ctrl+= — zoom in
+      if (e.key === "=" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        setCardWidth(cardWidth + ZOOM_STEP);
+        return;
+      }
+
+      // Ctrl+- — zoom out
+      if (e.key === "-" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        setCardWidth(cardWidth - ZOOM_STEP);
+        return;
+      }
+
+      // Ctrl+0 — reset zoom
+      if (e.key === "0" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        setCardWidth(DEFAULT_WIDTH);
+        return;
+      }
+
+      // F11 — toggle fullscreen
+      if (e.key === "F11") {
+        e.preventDefault();
+        const next = !isFullscreen;
+        setIsFullscreen(next);
+        getCurrentWebviewWindow().setFullscreen(next);
+        return;
+      }
+
+      // Ctrl+S — reserved (prevent browser save)
+      if (e.key.toLowerCase() === "s" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        return;
+      }
+
+      // Ctrl+F — reserved (prevent browser find)
+      if (e.key.toLowerCase() === "f" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        return;
+      }
+    };
+
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [capture.paused, capture.config, cardWidth, isFullscreen]);
 
   // Sync title bar theme on mount and theme change
   useEffect(() => {
