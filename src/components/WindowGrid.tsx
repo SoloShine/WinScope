@@ -26,7 +26,7 @@ interface WindowGridProps {
   activeCaptures: Set<string>;
   hiddenWindows: string[];
   cardWidth: number;
-  setCardWidth: (width: number) => void;
+  setCardWidth: (updater: number | ((prev: number) => number)) => void;
   onBringToFront: (title: string) => void;
 }
 
@@ -44,17 +44,10 @@ export function WindowGrid({
   const handleWheel = useCallback((e: React.WheelEvent) => {
     if (e.ctrlKey || e.metaKey) {
       e.preventDefault();
-      setCardWidth(
-        Math.max(
-          MIN_WIDTH,
-          Math.min(
-            MAX_WIDTH,
-            cardWidth + (e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP)
-          )
-        )
-      );
+      const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
+      setCardWidth((w: number) => Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, w + delta)));
     }
-  }, [cardWidth, setCardWidth]);
+  }, [setCardWidth]);
 
   const visibleWindows = windows.filter(
     (w) =>

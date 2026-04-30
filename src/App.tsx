@@ -39,15 +39,18 @@ function App() {
   // Debounced localStorage write
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const setCardWidth = useCallback((width: number) => {
-    const clamped = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, width));
-    setCardWidthRaw(clamped);
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = setTimeout(() => {
-      try {
-        localStorage.setItem("winscope-card-width", String(clamped));
-      } catch {}
-    }, 300);
+  const setCardWidth = useCallback((updater: number | ((prev: number) => number)) => {
+    setCardWidthRaw(prev => {
+      const raw = typeof updater === "function" ? updater(prev) : updater;
+      const clamped = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, raw));
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = setTimeout(() => {
+        try {
+          localStorage.setItem("winscope-card-width", String(clamped));
+        } catch {}
+      }, 300);
+      return clamped;
+    });
   }, []);
 
   // Keyboard shortcuts — registered once, reads refs for current values
@@ -91,14 +94,14 @@ function App() {
       // Ctrl+I — zoom in
       if (e.key.toLowerCase() === "i" && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
         e.preventDefault();
-        setCardWidth(cardWidthRef.current + ZOOM_STEP);
+        setCardWidth((w) => w + ZOOM_STEP);
         return;
       }
 
       // Ctrl+D — zoom out
       if (e.key.toLowerCase() === "d" && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
         e.preventDefault();
-        setCardWidth(cardWidthRef.current - ZOOM_STEP);
+        setCardWidth((w) => w - ZOOM_STEP);
         return;
       }
 
@@ -192,7 +195,7 @@ function App() {
         </div>
         <div className="absolute bottom-3 right-3 flex gap-1 z-20">
           <button
-            onClick={() => setCardWidth(cardWidth - ZOOM_STEP)}
+            onClick={() => setCardWidth((w) => w - ZOOM_STEP)}
             disabled={cardWidth <= MIN_WIDTH}
             className="p-1.5 rounded bg-surface-alt/80 border border-border text-content-muted hover:text-content hover:bg-surface transition-colors disabled:opacity-30"
             title={t("controls.zoomOut")}
@@ -207,7 +210,7 @@ function App() {
             <RotateCcw size={14} />
           </button>
           <button
-            onClick={() => setCardWidth(cardWidth + ZOOM_STEP)}
+            onClick={() => setCardWidth((w) => w + ZOOM_STEP)}
             disabled={cardWidth >= MAX_WIDTH}
             className="p-1.5 rounded bg-surface-alt/80 border border-border text-content-muted hover:text-content hover:bg-surface transition-colors disabled:opacity-30"
             title={t("controls.zoomIn")}
