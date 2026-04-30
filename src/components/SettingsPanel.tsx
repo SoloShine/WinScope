@@ -1,5 +1,6 @@
 import type { WindowInfo, AppConfig } from "../types";
 import { Eye, EyeOff, X, Monitor, MonitorOff } from "lucide-react";
+import { useTranslation } from "../i18n/index.tsx";
 
 interface SettingsPanelProps {
   windows: WindowInfo[];
@@ -20,6 +21,8 @@ export function SettingsPanel({
   onUpdateConfig,
   onClose,
 }: SettingsPanelProps) {
+  const { t } = useTranslation();
+
   const toggleHidden = (processName: string) => {
     const newConfig = { ...config };
     if (newConfig.hidden_windows.includes(processName)) {
@@ -35,7 +38,7 @@ export function SettingsPanel({
   return (
     <div className="w-72 bg-gray-800 border-l border-gray-700 flex flex-col">
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
-        <h2 className="text-sm font-semibold">Window Filter</h2>
+        <h2 className="text-sm font-semibold">{t("settings.title")}</h2>
         <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
           <X size={16} />
         </button>
@@ -54,7 +57,7 @@ export function SettingsPanel({
               <button
                 onClick={() => isActive ? onStopCapture(w.title, w.process_name) : onStartCapture(w.title, w.process_name)}
                 className="text-gray-400 hover:text-white transition-colors"
-                title={isActive ? "Stop monitoring" : "Start monitoring"}
+                title={isActive ? t("settings.stopMonitor") : t("settings.startMonitor")}
               >
                 {isActive ? <Monitor size={16} className="text-green-400" /> : <MonitorOff size={16} />}
               </button>
@@ -62,7 +65,7 @@ export function SettingsPanel({
               <button
                 onClick={() => toggleHidden(w.process_name)}
                 className="text-gray-400 hover:text-white transition-colors"
-                title={isHidden ? "Show in grid" : "Hide from grid"}
+                title={isHidden ? t("settings.showInGrid") : t("settings.hideFromGrid")}
               >
                 {isHidden ? <EyeOff size={14} /> : <Eye size={14} />}
               </button>
@@ -78,7 +81,7 @@ export function SettingsPanel({
 
       {windows.length === 0 && (
         <div className="flex-1 flex items-center justify-center text-gray-500 text-sm p-4">
-          No windows found
+          {t("settings.noWindows")}
         </div>
       )}
     </div>

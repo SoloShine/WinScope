@@ -3,14 +3,16 @@ import { useCapture } from "./hooks/useCapture";
 import { WindowGrid } from "./components/WindowGrid";
 import { Toolbar } from "./components/Toolbar";
 import { SettingsPanel } from "./components/SettingsPanel";
+import { useTranslation } from "./i18n/index.tsx";
 
 function App() {
   const capture = useCapture();
   const [showSettings, setShowSettings] = useState(false);
+  const { t } = useTranslation();
 
   if (!capture.config) {
     return (
-      <div className="h-full flex items-center justify-center text-gray-500">Loading...</div>
+      <div className="h-full flex items-center justify-center text-gray-500">{t("loading")}</div>
     );
   }
 

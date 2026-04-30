@@ -1,5 +1,6 @@
 import type { WindowInfo } from "../types";
 import { WindowCard } from "./WindowCard";
+import { useTranslation } from "../i18n/index.tsx";
 
 interface WindowGridProps {
   windows: WindowInfo[];
@@ -16,6 +17,8 @@ export function WindowGrid({
   hiddenWindows,
   onBringToFront,
 }: WindowGridProps) {
+  const { t } = useTranslation();
+
   const visibleWindows = windows.filter(
     (w) =>
       activeCaptures.has(w.title) &&
@@ -26,10 +29,8 @@ export function WindowGrid({
     return (
       <div className="flex-1 flex items-center justify-center text-gray-500">
         <div className="text-center">
-          <p className="text-lg mb-2">No windows being monitored</p>
-          <p className="text-sm">
-            Open the settings panel and select windows to monitor
-          </p>
+          <p className="text-lg mb-2">{t("grid.empty.title")}</p>
+          <p className="text-sm">{t("grid.empty.hint")}</p>
         </div>
       </div>
     );

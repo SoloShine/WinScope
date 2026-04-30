@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "../i18n/index.tsx";
 
 interface WindowCardProps {
   title: string;
@@ -16,6 +17,7 @@ export function WindowCard({
   onDoubleClick,
 }: WindowCardProps) {
   const [hovered, setHovered] = useState(false);
+  const { t } = useTranslation();
 
   return (
     <div
@@ -35,9 +37,9 @@ export function WindowCard({
             draggable={false}
           />
         ) : isCapturing ? (
-          <div className="text-gray-500 text-sm">Loading...</div>
+          <div className="text-gray-500 text-sm">{t("card.loading")}</div>
         ) : (
-          <div className="text-gray-600 text-sm">Not monitored</div>
+          <div className="text-gray-600 text-sm">{t("card.notMonitored")}</div>
         )}
       </div>
 
