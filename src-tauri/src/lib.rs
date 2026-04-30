@@ -1,5 +1,5 @@
 mod capture;
-mod config;
+pub mod config;
 mod windows;
 
 use config::AppConfig;
