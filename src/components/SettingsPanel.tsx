@@ -5,8 +5,8 @@ interface SettingsPanelProps {
   windows: WindowInfo[];
   config: AppConfig;
   activeCaptures: Set<string>;
-  onStartCapture: (title: string) => void;
-  onStopCapture: (title: string) => void;
+  onStartCapture: (title: string, processName: string) => void;
+  onStopCapture: (title: string, processName: string) => void;
   onUpdateConfig: (config: AppConfig) => void;
   onClose: () => void;
 }
@@ -52,7 +52,7 @@ export function SettingsPanel({
               className="flex items-center gap-2 px-4 py-2 border-b border-gray-700/50 hover:bg-gray-700/50"
             >
               <button
-                onClick={() => isActive ? onStopCapture(w.title) : onStartCapture(w.title)}
+                onClick={() => isActive ? onStopCapture(w.title, w.process_name) : onStartCapture(w.title, w.process_name)}
                 className="text-gray-400 hover:text-white transition-colors"
                 title={isActive ? "Stop monitoring" : "Start monitoring"}
               >

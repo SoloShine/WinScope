@@ -6,7 +6,7 @@ use config::AppConfig;
 use std::collections::HashMap;
 use std::sync::Mutex;
 use std::time::Duration;
-use tauri::{Manager, State};
+use tauri::{Emitter, Manager, State};
 use ::windows::Win32::Foundation::HWND;
 use ::windows::Win32::UI::WindowsAndMessaging::SetForegroundWindow;
 use windows_capture::capture::GraphicsCaptureApiHandler;
@@ -78,6 +78,7 @@ fn start_capture(
         .insert(window_title.clone(), stop_tx);
 
     let title_clone = window_title.clone();
+    let app_handle = app.clone();
 
     // Build capture settings
     let settings = Settings::new(
@@ -96,6 +97,8 @@ fn start_capture(
         if let Err(e) = capture::WindowCapture::start(settings) {
             eprintln!("Capture error for '{}': {}", title_clone, e);
         }
+        // Emit capture-closed event when capture thread exits
+        let _ = app_handle.emit("capture-closed", &title_clone);
     });
 
     Ok(())
