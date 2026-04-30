@@ -1,5 +1,8 @@
 describe("Toolbar", () => {
   beforeEach(async () => {
+    // Wait for app to fully load — button title may be "暂停" or "继续"
+    const pauseBtn = await $("//button[contains(@title,'暂停') or contains(@title,'继续') or contains(@title,'Pause') or contains(@title,'Resume')]");
+    await pauseBtn.waitForDisplayed({ timeout: 15000 });
     // Ensure Chinese locale for predictable selectors
     const html = await $("html");
     const lang = await html.getAttribute("lang");
@@ -8,9 +11,15 @@ describe("Toolbar", () => {
       if (await langBtn.isExisting()) await langBtn.click();
       await browser.pause(300);
     }
-    // Wait for app to load
-    const pauseBtn = await $("//button[contains(@title,'Space')]");
-    await pauseBtn.waitForDisplayed({ timeout: 15000 });
+  });
+
+  afterEach(async () => {
+    // Reset pause state — ensure unpaused for next test
+    const resumeBtn = await $("//button[contains(@title,'继续') or contains(@title,'Resume')]");
+    if (await resumeBtn.isExisting() && (await resumeBtn.isDisplayed())) {
+      await resumeBtn.click();
+      await browser.pause(200);
+    }
   });
 
   it("pause button toggles to resume", async () => {
@@ -22,22 +31,26 @@ describe("Toolbar", () => {
   });
 
   it("resume button toggles back to pause", async () => {
-    const resumeBtn = await $("//button[contains(@title,'继续')]");
-    await resumeBtn.click();
+    // First click to go to resume state
     const pauseBtn = await $("//button[contains(@title,'暂停')]");
-    await pauseBtn.waitForDisplayed({ timeout: 3000 });
-    expect(await pauseBtn.isDisplayed()).toBe(true);
+    await pauseBtn.click();
+    const resumeBtn = await $("//button[contains(@title,'继续')]");
+    await resumeBtn.waitForDisplayed({ timeout: 3000 });
+
+    await resumeBtn.click();
+    const pauseBtnAgain = await $("//button[contains(@title,'暂停')]");
+    await pauseBtnAgain.waitForDisplayed({ timeout: 3000 });
+    expect(await pauseBtnAgain.isDisplayed()).toBe(true);
   });
 
   it("pin button toggles always-on-top", async () => {
     const pinBtn = await $("//button[contains(@title,'置顶')]");
     await pinBtn.click();
-    // After clicking, text changes to "已置顶" but title stays "置顶 (Ctrl+P)"
     const pinnedText = await $("//*[contains(text(),'已置顶')]");
     await pinnedText.waitForDisplayed({ timeout: 3000 });
     expect(await pinnedText.isDisplayed()).toBe(true);
 
-    // Click again to unpin — use the same button (title unchanged)
+    // Click again to unpin
     const pinBtnAgain = await $("//button[contains(@title,'置顶')]");
     await pinBtnAgain.click();
     const unpinnedText = await $("//*[contains(text(),'置顶') and not(contains(text(),'已'))]");

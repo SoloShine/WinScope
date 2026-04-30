@@ -1,7 +1,16 @@
 describe("Keyboard Shortcuts", () => {
   beforeEach(async () => {
-    const pauseBtn = await $("//button[contains(@title,'暂停')]");
+    // Wait for app to fully load
+    const pauseBtn = await $("//button[contains(@title,'暂停') or contains(@title,'Pause')]");
     await pauseBtn.waitForDisplayed({ timeout: 15000 });
+    // Ensure Chinese locale
+    const html = await $("html");
+    const lang = await html.getAttribute("lang");
+    if (lang !== "zh-CN") {
+      const langBtn = await $("//button[contains(@title,'中文')]");
+      if (await langBtn.isExisting()) await langBtn.click();
+      await browser.pause(300);
+    }
     // Click body to ensure focus
     await $("body").click();
   });
@@ -42,7 +51,6 @@ describe("Keyboard Shortcuts", () => {
   it("Ctrl+= zooms in", async () => {
     await browser.keys(["Control", "="]);
     await browser.pause(200);
-    // App should still render toolbar
     const pauseBtn = await $("//button[contains(@title,'暂停')]");
     expect(await pauseBtn.isDisplayed()).toBe(true);
   });

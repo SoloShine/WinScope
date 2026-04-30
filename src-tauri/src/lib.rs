@@ -158,14 +158,8 @@ fn bring_to_front(window_title: String) -> Result<(), String> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let prevent = tauri_plugin_prevent_default::Builder::new()
-        .platform(tauri_plugin_prevent_default::PlatformOptions::new()
-            .browser_accelerator_keys(false)
-        )
-        .build();
-
     tauri::Builder::default()
-        .plugin(prevent)
+        .plugin(tauri_plugin_prevent_default::init())
         .setup(|app| {
             let config = config::load_config(app.handle());
             app.manage(AppState {

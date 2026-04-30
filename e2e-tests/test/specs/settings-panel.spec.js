@@ -1,5 +1,8 @@
 describe("Settings Panel", () => {
   beforeEach(async () => {
+    // Wait for app to fully load
+    const pauseBtn = await $("//button[contains(@title,'暂停') or contains(@title,'Pause')]");
+    await pauseBtn.waitForDisplayed({ timeout: 15000 });
     // Ensure Chinese locale
     const html = await $("html");
     const lang = await html.getAttribute("lang");
@@ -8,9 +11,7 @@ describe("Settings Panel", () => {
       if (await langBtn.isExisting()) await langBtn.click();
       await browser.pause(300);
     }
-    const pauseBtn = await $("//button[contains(@title,'暂停') or contains(@title,'继续')]");
-    await pauseBtn.waitForDisplayed({ timeout: 15000 });
-    // Ensure settings panel is open
+    // Open settings panel
     const header = await $("//h2[contains(text(),'窗口筛选')]");
     if (!(await header.isDisplayed())) {
       await browser.keys(["Control", "g"]);
@@ -24,16 +25,14 @@ describe("Settings Panel", () => {
   });
 
   it("lists real windows from desktop", async () => {
-    // Real app shows actual windows. Just verify at least some rows exist.
+    // Real app shows actual windows — just verify rows exist
     const windowRows = await $$(".border-l .overflow-auto > div");
-    const count = await windowRows.length;
+    const count = windowRows.length;
     expect(count).toBeGreaterThan(0);
   });
 
   it("close button hides the panel", async () => {
-    // The X button in the panel header
-    const panelHeader = await $(".border-l .border-b");
-    const closeBtn = await panelHeader.$("button");
+    const closeBtn = await $(".border-l .border-b button");
     await closeBtn.click();
     const header = await $("//h2[contains(text(),'窗口筛选')]");
     await header.waitForDisplayed({ timeout: 3000, reverse: true });
