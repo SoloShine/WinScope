@@ -75,7 +75,7 @@ export function WindowGrid({
       <div
         className="grid gap-4 auto-rows-min"
         style={{
-          gridTemplateColumns: "repeat(auto-fill, minmax(var(--card-width, 260px), 1fr))",
+          gridTemplateColumns: "repeat(auto-fill, var(--card-width, 260px))",
         }}
       >
         {visibleWindows.map((w) => (
