@@ -183,10 +183,11 @@ function App() {
         <div className="absolute bottom-3 left-3 flex gap-1 z-20">
           <button
             tabIndex={-1}
-            onClick={async () => {
+            onPointerDown={(e) => {
+              e.preventDefault();
               const next = !isFullscreen;
               setIsFullscreen(next);
-              await getCurrentWebviewWindow().setFullscreen(next);
+              getCurrentWebviewWindow().setFullscreen(next);
             }}
             className="p-1.5 rounded bg-surface-alt/80 border border-border text-content-muted hover:text-content hover:bg-surface transition-colors"
             title={isFullscreen ? t("controls.exitFullscreen") : t("controls.fullscreen")}
@@ -197,16 +198,22 @@ function App() {
         <div className="absolute bottom-3 right-3 flex gap-1 z-20">
           <button
             tabIndex={-1}
-            onClick={() => setCardWidth((w) => w - ZOOM_STEP)}
-            disabled={cardWidth <= MIN_WIDTH}
+            onPointerDown={(e) => {
+              e.preventDefault();
+              setCardWidth((w) => w - ZOOM_STEP);
+            }}
             className="p-1.5 rounded bg-surface-alt/80 border border-border text-content-muted hover:text-content hover:bg-surface transition-colors disabled:opacity-30"
+            style={{ opacity: cardWidth <= MIN_WIDTH ? 0.3 : undefined }}
             title={t("controls.zoomOut")}
           >
             <Minus size={14} />
           </button>
           <button
             tabIndex={-1}
-            onClick={() => setCardWidth(DEFAULT_WIDTH)}
+            onPointerDown={(e) => {
+              e.preventDefault();
+              setCardWidth(DEFAULT_WIDTH);
+            }}
             className="p-1.5 rounded bg-surface-alt/80 border border-border text-content-muted hover:text-content hover:bg-surface transition-colors"
             title={t("controls.zoomReset")}
           >
@@ -214,9 +221,12 @@ function App() {
           </button>
           <button
             tabIndex={-1}
-            onClick={() => setCardWidth((w) => w + ZOOM_STEP)}
-            disabled={cardWidth >= MAX_WIDTH}
+            onPointerDown={(e) => {
+              e.preventDefault();
+              setCardWidth((w) => w + ZOOM_STEP);
+            }}
             className="p-1.5 rounded bg-surface-alt/80 border border-border text-content-muted hover:text-content hover:bg-surface transition-colors disabled:opacity-30"
+            style={{ opacity: cardWidth >= MAX_WIDTH ? 0.3 : undefined }}
             title={t("controls.zoomIn")}
           >
             <Plus size={14} />
