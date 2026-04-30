@@ -22,6 +22,18 @@ pub struct WindowCapture {
     thumbnail_width: u32,
 }
 
+/// Convert BGRA pixel buffer to RGBA in-place.
+pub fn convert_bgra_to_rgba(data: &mut [u8]) {
+    for chunk in data.chunks_exact_mut(4) {
+        chunk.swap(0, 2);
+    }
+}
+
+/// Calculate thumbnail height preserving aspect ratio.
+pub fn thumbnail_height(src_width: u32, src_height: u32, target_width: u32) -> u32 {
+    (target_width as f32 * src_height as f32 / src_width as f32) as u32
+}
+
 impl GraphicsCaptureApiHandler for WindowCapture {
     type Flags = (AppHandle, Receiver<()>, String, u32);
     type Error = Box<dyn std::error::Error + Send + Sync>;
@@ -62,9 +74,7 @@ impl GraphicsCaptureApiHandler for WindowCapture {
         let mut rgba = raw.to_vec();
 
         // Convert BGRA to RGBA
-        for chunk in rgba.chunks_exact_mut(4) {
-            chunk.swap(0, 2);
-        }
+        convert_bgra_to_rgba(&mut rgba);
 
         // Create image and downscale
         let img = match image::RgbaImage::from_raw(width, height, rgba) {
@@ -72,8 +82,7 @@ impl GraphicsCaptureApiHandler for WindowCapture {
             None => return Ok(()),
         };
 
-        let thumb_height =
-            (self.thumbnail_width as f32 * height as f32 / width as f32) as u32;
+        let thumb_height = thumbnail_height(width, height, self.thumbnail_width);
         let thumbnail = image::imageops::resize(
             &img,
             self.thumbnail_width,
@@ -105,5 +114,53 @@ impl GraphicsCaptureApiHandler for WindowCapture {
 
     fn on_closed(&mut self) -> Result<(), Self::Error> {
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn bgra_to_rgba_single_pixel() {
+        let mut data = [10, 20, 30, 255]; // BGRA
+        convert_bgra_to_rgba(&mut data);
+        assert_eq!(data, [30, 20, 10, 255]); // RGBA
+    }
+
+    #[test]
+    fn bgra_to_rgba_multiple_pixels() {
+        let mut data = [10, 20, 30, 255, 40, 50, 60, 128];
+        convert_bgra_to_rgba(&mut data);
+        assert_eq!(data, [30, 20, 10, 255, 60, 50, 40, 128]);
+    }
+
+    #[test]
+    fn bgra_to_rgba_empty_buffer() {
+        let mut data: [u8; 0] = [];
+        convert_bgra_to_rgba(&mut data);
+    }
+
+    #[test]
+    fn bgra_to_rgba_incomplete_pixel_ignored() {
+        let mut data = [10, 20, 30, 255, 99]; // 5 bytes — last byte ignored
+        convert_bgra_to_rgba(&mut data);
+        assert_eq!(data, [30, 20, 10, 255, 99]);
+    }
+
+    #[test]
+    fn thumbnail_height_preserves_aspect_ratio() {
+        assert_eq!(thumbnail_height(1920, 1080, 480), 270);
+    }
+
+    #[test]
+    fn thumbnail_height_square_source() {
+        assert_eq!(thumbnail_height(100, 100, 50), 50);
+    }
+
+    #[test]
+    fn thumbnail_height_tall_source() {
+        let h = thumbnail_height(100, 200, 50);
+        assert_eq!(h, 100);
     }
 }
