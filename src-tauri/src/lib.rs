@@ -89,7 +89,7 @@ fn start_capture(
         MinimumUpdateIntervalSettings::Custom(Duration::from_millis(interval_ms)),
         DirtyRegionSettings::Default,
         ColorFormat::Bgra8,
-        (app, stop_rx, title_clone.clone(), 320u32),
+        (app, stop_rx, title_clone.clone(), 480u32),
     );
 
     // Spawn capture thread — start() blocks the thread with a Windows message loop
