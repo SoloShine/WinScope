@@ -1,14 +1,22 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCapture } from "./hooks/useCapture";
 import { WindowGrid } from "./components/WindowGrid";
 import { Toolbar } from "./components/Toolbar";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { useTranslation } from "./i18n/index.tsx";
+import { useTheme } from "./theme.tsx";
+import { invoke } from "@tauri-apps/api/core";
 
 function App() {
   const capture = useCapture();
   const [showSettings, setShowSettings] = useState(false);
   const { t } = useTranslation();
+  const { theme } = useTheme();
+
+  // Sync title bar theme on mount and theme change
+  useEffect(() => {
+    invoke("set_title_bar_theme", { dark: theme === "dark" }).catch(() => {});
+  }, [theme]);
 
   if (!capture.config) {
     return (

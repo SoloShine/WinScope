@@ -1,6 +1,7 @@
 import type { AppConfig } from "../types";
 import { Pin, PinOff, Settings, Pause, Play, RotateCcw, Languages, Sun, Moon } from "lucide-react";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { invoke } from "@tauri-apps/api/core";
 import { useTranslation } from "../i18n/index.tsx";
 import { useTheme } from "../theme.tsx";
 
@@ -35,11 +36,13 @@ export function Toolbar({ paused, setPaused, config, onUpdateConfig, onToggleSet
   };
 
   const handleToggleTheme = async () => {
-    toggleTheme();
     const newTheme = theme === "dark" ? "light" : "dark";
+    toggleTheme();
     try {
-      await getCurrentWebviewWindow().setTheme(newTheme === "dark" ? "dark" : "light");
-    } catch {}
+      await invoke("set_title_bar_theme", { dark: newTheme === "dark" });
+    } catch (e) {
+      console.error("Failed to set title bar theme:", e);
+    }
   };
 
   return (
