@@ -2,9 +2,11 @@
 
 Windows 桌面应用，实时显示所有前台 GUI 窗口的截屏缩略图，用于游戏挂机监控、多窗口浏览等场景。
 
+GitHub: https://github.com/SoloShine/WinScope.git
+
 ## 技术栈
 
-- **后端**: Rust + Tauri v2 + `windows-capture` crate (WinRT Graphics Capture API)
+- **后端**: Rust + Tauri v2 + `windows-capture` v1.5.0 (WinRT Graphics Capture API)
 - **前端**: React 19 + TypeScript + TailwindCSS v4
 - **构建**: Vite + Cargo
 
@@ -15,7 +17,7 @@ src-tauri/src/
   lib.rs          # Tauri 入口，命令注册，AppState
   capture.rs      # WindowCapture (GraphicsCaptureApiHandler)
   windows.rs      # 窗口枚举 (windows-capture::Window)
-  config.rs       # JSON 配置管理
+  config.rs       # JSON 配置管理 (app_data_dir/config.json)
 
 src/
   App.tsx                        # 主布局
@@ -24,8 +26,8 @@ src/
   i18n/locales/en-US.json        # 英文翻译
   hooks/useCapture.ts            # 核心 Hook (窗口列表、截图、配置)
   components/
-    WindowGrid.tsx               # 窗口缩略图网格
-    WindowCard.tsx               # 单窗口卡片
+    WindowGrid.tsx               # 窗口缩略图网格 (auto-fill + 固定像素宽度)
+    WindowCard.tsx               # 单窗口卡片 (aspect-video, hover 预览)
     Toolbar.tsx                  # 工具栏 (置顶/暂停/间隔/语言)
     SettingsPanel.tsx            # 窗口筛选侧栏
   types.ts                       # TypeScript 类型定义
@@ -41,21 +43,50 @@ cd src-tauri && cargo build  # 构建后端
 npx tauri build      # 生产构建 (输出 exe)
 ```
 
-## 关键 API
+## 关键 API (Tauri Commands)
 
-- `get_windows` → 枚举所有可见窗口
-- `start_capture(window_title)` → 启动窗口截图
-- `stop_capture(window_title)` → 停止截图
-- `bring_to_front(window_title)` → 将窗口带到前台
-- `get_config` / `update_config` → 配置读写
+| 命令 | 参数 | 说明 |
+|------|------|------|
+| `get_windows` | - | 枚举所有可见窗口 |
+| `start_capture` | `window_title: String` | 启动窗口截图 (每窗口一个线程) |
+| `stop_capture` | `window_title: String` | 停止截图 (通过 mpsc channel 发信号) |
+| `bring_to_front` | `window_title: String` | 将窗口恢复并带到前台 |
+| `get_config` | - | 读取配置 |
+| `update_config` | `config: AppConfig` | 写入配置 |
 
-## 注意事项
+## 数据流
 
-- 需要 Windows 10 1903+ (Build 18362)
-- WinRT Capture API 会显示黄色边框通知 (Windows 安全特性)
-- `windows-capture` crate v1.5.0, `windows` crate v0.61
-- 每个被监控窗口占一个独立线程 (GraphicsCaptureApiHandler 阻塞线程)
-- 默认语言为中文，可在工具栏切换
+1. Rust 后端定时枚举窗口 → `get_windows` command
+2. 每个被监控窗口独立线程捕获帧 → `capture-update` event → 前端更新缩略图
+3. 窗口关闭时 → `capture-closed` event → 前端清理状态
+4. 配置变更通过 `update_config` 持久化到 JSON
+
+## API 踩坑记录
+
+### windows-capture v1.5.0
+- `as_nopadding_buffer()` **无参数**，返回 `Result<&mut [u8], Error>`
+- `Window::as_raw_hwnd()` 返回 `isize`，用 `HWND(value)` 包装
+- `GraphicsCaptureApiHandler::start(settings)` **阻塞线程**，必须 spawn
+- `Settings::new()` 有 8 个参数，`SecondaryWindowSettings` 和 `DirtyRegionSettings` 用 `Default`
+
+### windows crate
+- **必须用 v0.61**（不是 v0.58），因为 windows-capture v1.5.0 依赖 windows 0.61
+- 本地 `mod windows;` 会遮蔽外部 crate，用 `::windows::Win32::...` 加前导 `::`
+- `SetForegroundWindow` 返回 `BOOL` 不是 `Result`
+- 最小化窗口需先 `ShowWindow(SW_RESTORE)` 再 `SetForegroundWindow`
+
+### Tauri v2
+- `getCurrentWebviewWindow()` 不是 `getCurrentWindow()`
+- 权限名: `allow-inner-size` (非 allow-get-size), `allow-outer-position` (非 allow-get-position)
+- `app.emit()` 需要 `use tauri::Emitter`
+- `app.path().app_data_dir()` 需要 `use tauri::Manager`
+- bundle identifier 不能是 `com.tauri.dev`
+
+## 已知限制
+
+- 全屏独占模式的 DirectX 游戏可能无法截取（窗口化/无边框正常）
+- WinRT Capture 会在被截取窗口显示黄色边框通知（Windows 安全特性）
+- 窗口匹配用 process_name，同一进程多窗口会全部监控
 
 ## 设计文档
 
