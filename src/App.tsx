@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { flushSync } from "react-dom";
 import { useCapture } from "./hooks/useCapture";
 import {
   WindowGrid,
@@ -40,18 +41,24 @@ function App() {
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const setCardWidth = useCallback((updater: number | ((prev: number) => number)) => {
-    setCardWidthRaw(prev => {
-      const raw = typeof updater === "function" ? updater(prev) : updater;
-      const clamped = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, raw));
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-      saveTimerRef.current = setTimeout(() => {
-        try {
-          localStorage.setItem("winscope-card-width", String(clamped));
-        } catch {}
-      }, 300);
-      return clamped;
+    flushSync(() => {
+      setCardWidthRaw(prev => {
+        const raw = typeof updater === "function" ? updater(prev) : updater;
+        return Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, raw));
+      });
     });
   }, []);
+
+  // Sync cardWidth to localStorage (debounced)
+  useEffect(() => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      try {
+        localStorage.setItem("winscope-card-width", String(cardWidth));
+      } catch {}
+    }, 300);
+    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
+  }, [cardWidth]);
 
   // Keyboard shortcuts — registered once, reads refs for current values
   useEffect(() => {

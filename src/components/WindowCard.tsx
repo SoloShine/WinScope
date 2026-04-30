@@ -23,6 +23,7 @@ export function WindowCard({
     <div
       className="relative bg-surface-alt rounded-lg overflow-hidden border border-border
                  hover:border-blue-500 transition-colors cursor-pointer select-none"
+      style={{ contain: "layout style paint" }}
       onDoubleClick={onDoubleClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
