@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useCapture } from "./hooks/useCapture";
 import {
   WindowGrid,
@@ -25,15 +25,32 @@ function App() {
   const { t } = useTranslation();
   const { theme } = useTheme();
 
-  const setCardWidth = (width: number) => {
+  // Refs to avoid re-registering keydown listener
+  const cardWidthRef = useRef(cardWidth);
+  const pausedRef = useRef(capture.paused);
+  const configRef = useRef(capture.config);
+  const isFullscreenRef = useRef(isFullscreen);
+
+  cardWidthRef.current = cardWidth;
+  pausedRef.current = capture.paused;
+  configRef.current = capture.config;
+  isFullscreenRef.current = isFullscreen;
+
+  // Debounced localStorage write
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const setCardWidth = useCallback((width: number) => {
     const clamped = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, width));
     setCardWidthRaw(clamped);
-    try {
-      localStorage.setItem("winscope-card-width", String(clamped));
-    } catch {}
-  };
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      try {
+        localStorage.setItem("winscope-card-width", String(clamped));
+      } catch {}
+    }, 300);
+  }, []);
 
-  // Keyboard shortcuts
+  // Keyboard shortcuts — registered once, reads refs for current values
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement).tagName;
@@ -42,17 +59,18 @@ function App() {
       // Space — pause/resume
       if (e.key === " " && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault();
-        capture.setPaused(!capture.paused);
+        capture.setPaused(!pausedRef.current);
         return;
       }
 
       // Ctrl+P — toggle always-on-top
       if (e.key.toLowerCase() === "p" && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
-        if (capture.config) {
-          const newOnTop = !capture.config.always_on_top;
+        const cfg = configRef.current;
+        if (cfg) {
+          const newOnTop = !cfg.always_on_top;
           getCurrentWebviewWindow().setAlwaysOnTop(newOnTop);
-          capture.updateConfig({ ...capture.config, always_on_top: newOnTop });
+          capture.updateConfig({ ...cfg, always_on_top: newOnTop });
         }
         return;
       }
@@ -73,14 +91,14 @@ function App() {
       // Ctrl+I — zoom in
       if (e.key.toLowerCase() === "i" && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
         e.preventDefault();
-        setCardWidth(cardWidth + ZOOM_STEP);
+        setCardWidth(cardWidthRef.current + ZOOM_STEP);
         return;
       }
 
       // Ctrl+D — zoom out
       if (e.key.toLowerCase() === "d" && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
         e.preventDefault();
-        setCardWidth(cardWidth - ZOOM_STEP);
+        setCardWidth(cardWidthRef.current - ZOOM_STEP);
         return;
       }
 
@@ -94,7 +112,7 @@ function App() {
       // F11 — toggle fullscreen
       if (e.key === "F11") {
         e.preventDefault();
-        const next = !isFullscreen;
+        const next = !isFullscreenRef.current;
         setIsFullscreen(next);
         getCurrentWebviewWindow().setFullscreen(next);
         return;
@@ -115,7 +133,7 @@ function App() {
 
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, [capture.paused, capture.config, cardWidth, isFullscreen]);
+  }, [capture.setPaused, capture.updateConfig, setCardWidth]);
 
   // Sync title bar theme on mount and theme change
   useEffect(() => {
