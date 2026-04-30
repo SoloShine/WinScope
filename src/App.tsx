@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { flushSync } from "react-dom";
 import { useCapture } from "./hooks/useCapture";
 import {
   WindowGrid,
@@ -18,6 +17,10 @@ import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { Maximize, Minimize, Plus, Minus, RotateCcw } from "lucide-react";
 
+function applyZoom(width: number) {
+  document.documentElement.style.setProperty("--card-width", `${width}px`);
+}
+
 function App() {
   const capture = useCapture();
   const [showSettings, setShowSettings] = useState(false);
@@ -26,54 +29,52 @@ function App() {
   const { t } = useTranslation();
   const { theme } = useTheme();
 
-  // Refs to avoid re-registering keydown listener
-  const cardWidthRef = useRef(cardWidth);
+  // Live width ref — updated immediately, React state syncs after debounce
+  const liveWidthRef = useRef(cardWidth);
+  const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Sync CSS variable on mount
+  useEffect(() => {
+    applyZoom(cardWidth);
+  }, []);
+
+  const setCardWidth = useCallback((updater: number | ((prev: number) => number)) => {
+    const raw = typeof updater === "function" ? updater(liveWidthRef.current) : updater;
+    const clamped = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, raw));
+    liveWidthRef.current = clamped;
+    // Update visual IMMEDIATELY via CSS variable — no React re-render
+    applyZoom(clamped);
+    // Debounce React state sync (for button disabled states + localStorage)
+    if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
+    syncTimerRef.current = setTimeout(() => {
+      setCardWidthRaw(clamped);
+      try {
+        localStorage.setItem("winscope-card-width", String(clamped));
+      } catch {}
+    }, 150);
+  }, []);
+
+  // Refs for keydown listener
   const pausedRef = useRef(capture.paused);
   const configRef = useRef(capture.config);
   const isFullscreenRef = useRef(isFullscreen);
 
-  cardWidthRef.current = cardWidth;
   pausedRef.current = capture.paused;
   configRef.current = capture.config;
   isFullscreenRef.current = isFullscreen;
 
-  // Debounced localStorage write
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const setCardWidth = useCallback((updater: number | ((prev: number) => number)) => {
-    flushSync(() => {
-      setCardWidthRaw(prev => {
-        const raw = typeof updater === "function" ? updater(prev) : updater;
-        return Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, raw));
-      });
-    });
-  }, []);
-
-  // Sync cardWidth to localStorage (debounced)
-  useEffect(() => {
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = setTimeout(() => {
-      try {
-        localStorage.setItem("winscope-card-width", String(cardWidth));
-      } catch {}
-    }, 300);
-    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
-  }, [cardWidth]);
-
-  // Keyboard shortcuts — registered once, reads refs for current values
+  // Keyboard shortcuts — registered once
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement).tagName;
       if (tag === "INPUT" || tag === "TEXTAREA") return;
 
-      // Space — pause/resume
       if (e.key === " " && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault();
         capture.setPaused(!pausedRef.current);
         return;
       }
 
-      // Ctrl+P — toggle always-on-top
       if (e.key.toLowerCase() === "p" && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
         const cfg = configRef.current;
@@ -85,41 +86,35 @@ function App() {
         return;
       }
 
-      // Ctrl+G — toggle settings panel
       if (e.key.toLowerCase() === "g" && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
         setShowSettings((prev) => !prev);
         return;
       }
 
-      // Escape — close settings panel
       if (e.key === "Escape") {
         setShowSettings(false);
         return;
       }
 
-      // Ctrl+I — zoom in
       if (e.key.toLowerCase() === "i" && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
         e.preventDefault();
         setCardWidth((w) => w + ZOOM_STEP);
         return;
       }
 
-      // Ctrl+D — zoom out
       if (e.key.toLowerCase() === "d" && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
         e.preventDefault();
         setCardWidth((w) => w - ZOOM_STEP);
         return;
       }
 
-      // Ctrl+R — reset zoom
       if (e.key.toLowerCase() === "r" && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
         e.preventDefault();
         setCardWidth(DEFAULT_WIDTH);
         return;
       }
 
-      // F11 — toggle fullscreen
       if (e.key === "F11") {
         e.preventDefault();
         const next = !isFullscreenRef.current;
@@ -128,13 +123,11 @@ function App() {
         return;
       }
 
-      // Ctrl+S — reserved (prevent browser save)
       if (e.key.toLowerCase() === "s" && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
         return;
       }
 
-      // Ctrl+F — reserved (prevent browser find)
       if (e.key.toLowerCase() === "f" && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
         return;
@@ -145,7 +138,7 @@ function App() {
     return () => document.removeEventListener("keydown", handler);
   }, [capture.setPaused, capture.updateConfig, setCardWidth]);
 
-  // Sync title bar theme on mount and theme change
+  // Sync title bar theme
   useEffect(() => {
     invoke("set_title_bar_theme", { dark: theme === "dark" }).catch(() => {});
   }, [theme]);
@@ -209,8 +202,8 @@ function App() {
               e.preventDefault();
               setCardWidth((w) => w - ZOOM_STEP);
             }}
-            className="p-1.5 rounded bg-surface-alt/80 border border-border text-content-muted hover:text-content hover:bg-surface transition-colors disabled:opacity-30"
-            style={{ opacity: cardWidth <= MIN_WIDTH ? 0.3 : undefined }}
+            className="p-1.5 rounded bg-surface-alt/80 border border-border text-content-muted hover:text-content hover:bg-surface transition-colors"
+            style={{ opacity: liveWidthRef.current <= MIN_WIDTH ? 0.3 : undefined }}
             title={t("controls.zoomOut")}
           >
             <Minus size={14} />
@@ -232,8 +225,8 @@ function App() {
               e.preventDefault();
               setCardWidth((w) => w + ZOOM_STEP);
             }}
-            className="p-1.5 rounded bg-surface-alt/80 border border-border text-content-muted hover:text-content hover:bg-surface transition-colors disabled:opacity-30"
-            style={{ opacity: cardWidth >= MAX_WIDTH ? 0.3 : undefined }}
+            className="p-1.5 rounded bg-surface-alt/80 border border-border text-content-muted hover:text-content hover:bg-surface transition-colors"
+            style={{ opacity: liveWidthRef.current >= MAX_WIDTH ? 0.3 : undefined }}
             title={t("controls.zoomIn")}
           >
             <Plus size={14} />

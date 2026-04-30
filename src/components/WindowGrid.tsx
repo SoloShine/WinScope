@@ -35,10 +35,11 @@ export function WindowGrid({
   captures,
   activeCaptures,
   hiddenWindows,
-  cardWidth,
+  cardWidth: _cardWidth,
   setCardWidth,
   onBringToFront,
 }: WindowGridProps) {
+  void _cardWidth;
   const { t } = useTranslation();
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
@@ -74,7 +75,7 @@ export function WindowGrid({
       <div
         className="grid gap-4 auto-rows-min"
         style={{
-          gridTemplateColumns: `repeat(auto-fill, minmax(${cardWidth}px, 1fr))`,
+          gridTemplateColumns: "repeat(auto-fill, minmax(var(--card-width, 260px), 1fr))",
         }}
       >
         {visibleWindows.map((w) => (
