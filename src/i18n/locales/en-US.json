@@ -7,6 +7,8 @@
   "toolbar.resume": "Resume",
   "toolbar.settings": "Settings",
   "toolbar.lang": "中文",
+  "toolbar.theme.dark": "Dark",
+  "toolbar.theme.light": "Light",
   "card.loading": "Loading...",
   "card.notMonitored": "Not monitored",
   "grid.empty.title": "No windows being monitored",

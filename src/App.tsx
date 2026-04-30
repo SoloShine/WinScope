@@ -12,12 +12,12 @@ function App() {
 
   if (!capture.config) {
     return (
-      <div className="h-full flex items-center justify-center text-gray-500">{t("loading")}</div>
+      <div className="h-full flex items-center justify-center text-content-muted">{t("loading")}</div>
     );
   }
 
   return (
-    <div className="h-full flex flex-col bg-gray-900 text-white">
+    <div className="h-full flex flex-col bg-surface text-content">
       <Toolbar
         paused={capture.paused}
         setPaused={capture.setPaused}

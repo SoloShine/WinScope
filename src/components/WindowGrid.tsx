@@ -61,7 +61,7 @@ export function WindowGrid({
 
   if (visibleWindows.length === 0) {
     return (
-      <div className="flex-1 flex items-center justify-center text-gray-500">
+      <div className="flex-1 flex items-center justify-center text-content-muted">
         <div className="text-center">
           <p className="text-lg mb-2">{t("grid.empty.title")}</p>
           <p className="text-sm">{t("grid.empty.hint")}</p>

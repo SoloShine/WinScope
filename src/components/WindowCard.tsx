@@ -21,14 +21,13 @@ export function WindowCard({
 
   return (
     <div
-      className="relative bg-gray-800 rounded-lg overflow-hidden border border-gray-700
+      className="relative bg-surface-alt rounded-lg overflow-hidden border border-border
                  hover:border-blue-500 transition-colors cursor-pointer select-none"
       onDoubleClick={onDoubleClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* Thumbnail */}
-      <div className="aspect-video bg-gray-900 flex items-center justify-center">
+      <div className="aspect-video bg-surface-deep flex items-center justify-center">
         {imageBase64 ? (
           <img
             src={`data:image/png;base64,${imageBase64}`}
@@ -37,28 +36,25 @@ export function WindowCard({
             draggable={false}
           />
         ) : isCapturing ? (
-          <div className="text-gray-500 text-sm">{t("card.loading")}</div>
+          <div className="text-content-muted text-sm">{t("card.loading")}</div>
         ) : (
-          <div className="text-gray-600 text-sm">{t("card.notMonitored")}</div>
+          <div className="text-content-muted text-sm">{t("card.notMonitored")}</div>
         )}
       </div>
 
-      {/* Title bar */}
       <div className="px-3 py-2 flex items-center gap-2">
-        <span className="text-xs text-gray-400 truncate flex-1" title={processName}>
+        <span className="text-xs text-content-muted truncate flex-1" title={processName}>
           {processName}
         </span>
-        <span className="text-sm text-gray-200 truncate flex-1 text-right" title={title}>
+        <span className="text-sm text-content truncate flex-1 text-right" title={title}>
           {title}
         </span>
       </div>
 
-      {/* Status indicator */}
       {isCapturing && (
         <div className="absolute top-2 right-2 w-2 h-2 bg-green-500 rounded-full animate-pulse" />
       )}
 
-      {/* Hover preview */}
       {hovered && imageBase64 && (
         <div className="absolute inset-0 z-10 bg-black/90 flex items-center justify-center p-2">
           <img

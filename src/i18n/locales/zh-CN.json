@@ -7,6 +7,8 @@
   "toolbar.resume": "继续",
   "toolbar.settings": "设置",
   "toolbar.lang": "English",
+  "toolbar.theme.dark": "深色",
+  "toolbar.theme.light": "浅色",
   "card.loading": "加载中...",
   "card.notMonitored": "未监控",
   "grid.empty.title": "暂无监控窗口",

@@ -1,5 +1,32 @@
 @import "tailwindcss";
 
+@theme {
+  --color-surface: var(--surface);
+  --color-surface-alt: var(--surface-alt);
+  --color-surface-deep: var(--surface-deep);
+  --color-border: var(--border-clr);
+  --color-content: var(--content);
+  --color-content-muted: var(--content-muted);
+}
+
+:root {
+  --surface: #f9fafb;
+  --surface-alt: #ffffff;
+  --surface-deep: #f3f4f6;
+  --border-clr: #e5e7eb;
+  --content: #111827;
+  --content-muted: #6b7280;
+}
+
+[data-theme="dark"] {
+  --surface: #111827;
+  --surface-alt: #1f2937;
+  --surface-deep: #030712;
+  --border-clr: #374151;
+  --content: #ffffff;
+  --content-muted: #9ca3af;
+}
+
 html,
 body,
 #root {
