@@ -71,6 +71,7 @@ function App() {
   // Keyboard shortcuts — registered once
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (e.isComposing) return;
       const tag = (e.target as HTMLElement).tagName;
       if (tag === "INPUT" || tag === "TEXTAREA") return;
 
@@ -155,7 +156,8 @@ function App() {
     const setup = async () => {
       try {
         // Ctrl+Shift+M: toggle show/hide window
-        await register("CommandOrControl+Shift+M", async () => {
+        await register("CommandOrControl+Shift+M", async (event) => {
+          if (event.state !== "Pressed") return;
           const win = getCurrentWebviewWindow();
           if (await win.isMinimized()) {
             await win.unminimize();
@@ -166,7 +168,8 @@ function App() {
         });
 
         // Ctrl+Shift+Space: toggle pause/resume captures
-        await register("CommandOrControl+Shift+Space", () => {
+        await register("CommandOrControl+Shift+Space", (event) => {
+          if (event.state !== "Pressed") return;
           capture.setPaused(!pausedRef.current);
         });
       } catch (e) {

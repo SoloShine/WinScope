@@ -1,5 +1,6 @@
+import { useMemo } from "react";
 import type { WindowInfo, AppConfig } from "../types";
-import { Eye, EyeOff, X, Monitor, MonitorOff, Tag } from "lucide-react";
+import { Eye, EyeOff, X, Monitor, MonitorOff, Tag, Plus } from "lucide-react";
 import { useTranslation } from "../i18n/index.tsx";
 
 interface SettingsPanelProps {
@@ -35,19 +36,40 @@ export function SettingsPanel({
     onUpdateConfig(newConfig);
   };
 
-  const updateTags = (processName: string, tagsStr: string) => {
-    const tags = tagsStr
-      .split(/[,，]/)
-      .map((t) => t.trim())
-      .filter(Boolean);
+  const toggleTag = (processName: string, tag: string) => {
+    const current = config.window_tags[processName] || [];
+    const next = current.includes(tag)
+      ? current.filter((t) => t !== tag)
+      : [...current, tag];
     const newConfig = { ...config, window_tags: { ...config.window_tags } };
-    if (tags.length > 0) {
-      newConfig.window_tags[processName] = tags;
+    if (next.length > 0) {
+      newConfig.window_tags[processName] = next;
     } else {
       delete newConfig.window_tags[processName];
     }
     onUpdateConfig(newConfig);
   };
+
+  const addCustomTag = (processName: string, value: string) => {
+    const tag = value.trim();
+    if (!tag) return;
+    const current = config.window_tags[processName] || [];
+    if (current.includes(tag)) return;
+    const newConfig = {
+      ...config,
+      window_tags: { ...config.window_tags, [processName]: [...current, tag] },
+    };
+    onUpdateConfig(newConfig);
+  };
+
+  // Collect all existing tags across all windows
+  const allExistingTags = useMemo(() => {
+    const set = new Set<string>();
+    for (const tags of Object.values(config.window_tags)) {
+      for (const tag of tags) set.add(tag);
+    }
+    return Array.from(set).sort();
+  }, [config.window_tags]);
 
   return (
     <div className="w-72 bg-surface-alt border-l border-border flex flex-col">
@@ -62,7 +84,7 @@ export function SettingsPanel({
         {windows.map((w) => {
           const isActive = activeCaptures.has(w.title);
           const isHidden = config.hidden_windows.includes(w.process_name);
-          const tags = (config.window_tags[w.process_name] || []).join(", ");
+          const windowTags = config.window_tags[w.process_name] || [];
 
           return (
             <div
@@ -91,16 +113,51 @@ export function SettingsPanel({
                   <div className="text-xs text-content-muted truncate">{w.process_name}</div>
                 </div>
               </div>
+              {/* Tag chips — click to toggle */}
+              {allExistingTags.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-1 ml-8">
+                  {allExistingTags.map((tag) => {
+                    const active = windowTags.includes(tag);
+                    return (
+                      <button
+                        key={tag}
+                        onClick={() => toggleTag(w.process_name, tag)}
+                        className={`px-1.5 py-0.5 rounded text-xs transition-colors ${
+                          active
+                            ? "bg-blue-600 text-white"
+                            : "bg-surface border border-border text-content-muted hover:text-content"
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {/* Add new tag input */}
               <div className="flex items-center gap-1 mt-1 ml-8">
                 <Tag size={12} className="text-content-muted shrink-0" />
                 <input
                   type="text"
-                  value={tags}
-                  onChange={(e) => updateTags(w.process_name, e.target.value)}
                   placeholder={t("settings.tagPlaceholder")}
                   className="flex-1 min-w-0 px-1 py-0.5 text-xs bg-transparent border border-border rounded
                              text-content placeholder:text-content-muted/50 focus:outline-none focus:border-blue-500"
+                  onKeyDown={(e) => {
+                    if ((e.nativeEvent as unknown as { isComposing?: boolean }).isComposing) return;
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addCustomTag(w.process_name, (e.target as HTMLInputElement).value);
+                      (e.target as HTMLInputElement).value = "";
+                    }
+                  }}
+                  onBlur={(e) => {
+                    if (e.target.value.trim()) {
+                      addCustomTag(w.process_name, e.target.value);
+                      e.target.value = "";
+                    }
+                  }}
                 />
+                <Plus size={12} className="text-content-muted shrink-0" />
               </div>
             </div>
           );
