@@ -16,6 +16,7 @@ import { useTranslation } from "./i18n/index.tsx";
 import { useTheme } from "./theme.tsx";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { register, unregister } from "@tauri-apps/plugin-global-shortcut";
 import { Maximize, Minimize, Plus, Minus, RotateCcw } from "lucide-react";
 
 function applyZoom(width: number) {
@@ -148,6 +149,36 @@ function App() {
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
   }, [capture.setPaused, capture.updateConfig, setCardWidth]);
+
+  // Global hotkeys (work even when app is not focused)
+  useEffect(() => {
+    const setup = async () => {
+      try {
+        // Ctrl+Shift+M: toggle show/hide window
+        await register("CommandOrControl+Shift+M", async () => {
+          const win = getCurrentWebviewWindow();
+          if (await win.isMinimized()) {
+            await win.unminimize();
+            await win.setFocus();
+          } else {
+            await win.minimize();
+          }
+        });
+
+        // Ctrl+Shift+Space: toggle pause/resume captures
+        await register("CommandOrControl+Shift+Space", () => {
+          capture.setPaused(!pausedRef.current);
+        });
+      } catch (e) {
+        console.error("Failed to register global shortcuts:", e);
+      }
+    };
+    setup();
+    return () => {
+      unregister("CommandOrControl+Shift+M").catch(() => {});
+      unregister("CommandOrControl+Shift+Space").catch(() => {});
+    };
+  }, [capture.setPaused]);
 
   // Sync title bar theme
   useEffect(() => {

@@ -100,12 +100,18 @@ npx tauri build      # 生产构建 (输出 exe)
 | `Ctrl+D` | 缩小缩略图 | D = Decrease |
 | `Ctrl+R` | 重置缩放(260px) | R = Reset |
 | `F11` | 切换全屏 | 需要 window:allow-set-fullscreen 权限 |
-| `Ctrl+S` | (预留) 截图保存 | 仅注册按键，后续接入 |
-| `Ctrl+F` | (预留) 窗口搜索 | 同上 |
+| `Ctrl+S` | 截图保存 | 全分辨率，保存最后悬停卡片 |
+| `Ctrl+F` | (预留) 窗口搜索 | 仅注册按键 |
+
+### 全局热键 (应用不在前台也生效)
+| 快捷键 | 功能 |
+|--------|------|
+| `Ctrl+Shift+M` | 最小化/恢复窗口 |
+| `Ctrl+Shift+Space` | 暂停/恢复截图 |
 
 UI 按钮: 左下角全屏切换，右下角缩放(-/重置/+)。Ctrl+滚轮缩放仍可用。
 
-实现: `App.tsx` 中 `useEffect` 注册 `keydown` 监听，`cardWidth` 状态从 `WindowGrid` 提升到 `App`。仅应用内快捷键，全局热键留作后续迭代。
+实现: 应用内快捷键通过 `App.tsx` 的 `keydown` 监听（用 ref 避免 stale closure）。全局热键通过 `tauri-plugin-global-shortcut` 注册。
 
 ## 功能开发优先级
 
@@ -113,7 +119,7 @@ UI 按钮: 左下角全屏切换，右下角缩放(-/重置/+)。Ctrl+滚轮缩�
 2. ~~单窗口截图保存~~ — 悬停预览时下载按钮 + Ctrl+S 保存最后悬停卡片
 3. ~~自动监控规则~~ — 窗口列表刷新时自动匹配 monitored_windows 开始截取
 4. ~~窗口分组/标签~~ — 手动标签(逗号分隔) + 网格标签筛选栏
-5. 全局热键 — 系统级注册 (如 Ctrl+Shift+M)
+5. ~~全局热键~~ — Ctrl+Shift+M 最小化/恢复, Ctrl+Shift+Space 暂停/恢复
 6. 历史缩略图时间线 — 回溯窗口状态变化
 7. 系统托盘 — 最小化到托盘
 8. 多显示器过滤 — 只监控指定屏幕

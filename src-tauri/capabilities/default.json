@@ -12,6 +12,16 @@
     "core:window:allow-set-position",
     "core:window:allow-inner-size",
     "core:window:allow-outer-position",
-    "dialog:default"
+    "dialog:default",
+    "global-shortcut:allow-register",
+    "global-shortcut:allow-unregister",
+    "global-shortcut:allow-is-registered",
+    "core:window:allow-hide",
+    "core:window:allow-show",
+    "core:window:allow-set-focus",
+    "core:window:allow-is-visible",
+    "core:window:allow-minimize",
+    "core:window:allow-unminimize",
+    "core:window:allow-is-minimized"
   ]
 }
