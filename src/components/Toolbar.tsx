@@ -1,5 +1,5 @@
 import type { AppConfig } from "../types";
-import { Pin, PinOff, Settings, Pause, Play, RotateCcw, Languages, Sun, Moon } from "lucide-react";
+import { Pin, PinOff, ListFilter, Pause, Play, RotateCcw, Languages, Sun, Moon } from "lucide-react";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { invoke } from "@tauri-apps/api/core";
 import { useTranslation } from "../i18n/index.tsx";
@@ -105,7 +105,7 @@ export function Toolbar({ paused, setPaused, config, onUpdateConfig, onToggleSet
       </button>
 
       <button onClick={onToggleSettings} className="text-content-muted hover:text-content transition-colors" title={t("toolbar.settings.hint")}>
-        <Settings size={18} />
+        <ListFilter size={18} />
       </button>
     </div>
   );
