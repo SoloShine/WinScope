@@ -31,5 +31,6 @@
   "controls.exitFullscreen": "Exit Fullscreen",
   "controls.zoomIn": "Zoom In",
   "controls.zoomOut": "Zoom Out",
-  "controls.zoomReset": "Reset Zoom"
+  "controls.zoomReset": "Reset Zoom",
+  "card.save": "Save Screenshot (Ctrl+S)"
 }

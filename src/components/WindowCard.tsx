@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { Download } from "lucide-react";
+import { save } from "@tauri-apps/plugin-dialog";
+import { invoke } from "@tauri-apps/api/core";
 import { useTranslation } from "../i18n/index.tsx";
 
 interface WindowCardProps {
@@ -7,6 +10,29 @@ interface WindowCardProps {
   imageBase64: string | undefined;
   isCapturing: boolean;
   onDoubleClick: () => void;
+  onHover?: (title: string | null) => void;
+}
+
+function formatTimestamp() {
+  const now = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+}
+
+export async function saveImage(title: string, _thumbnailBase64: string) {
+  const sanitized = title.replace(/[<>:"/\\|?*]/g, "_").slice(0, 60);
+  const defaultName = `WinScope_${sanitized}_${formatTimestamp()}.png`;
+
+  const path = await save({
+    defaultPath: defaultName,
+    filters: [{ name: "PNG", extensions: ["png"] }],
+  });
+
+  if (path) {
+    // Capture full-resolution screenshot and save
+    const fullBase64 = await invoke<string>("capture_full_screenshot", { windowTitle: title });
+    await invoke("save_screenshot", { path, base64Data: fullBase64 });
+  }
 }
 
 export function WindowCard({
@@ -15,9 +41,20 @@ export function WindowCard({
   imageBase64,
   isCapturing,
   onDoubleClick,
+  onHover,
 }: WindowCardProps) {
   const [hovered, setHovered] = useState(false);
   const { t } = useTranslation();
+
+  const handleSave = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!imageBase64) return;
+    try {
+      await saveImage(title, imageBase64);
+    } catch (err) {
+      console.error("Failed to save screenshot:", err);
+    }
+  };
 
   return (
     <div
@@ -25,7 +62,7 @@ export function WindowCard({
                  hover:border-blue-500 transition-colors cursor-pointer select-none"
       style={{ contain: "layout style paint" }}
       onDoubleClick={onDoubleClick}
-      onMouseEnter={() => setHovered(true)}
+      onMouseEnter={() => { setHovered(true); if (imageBase64) onHover?.(title); }}
       onMouseLeave={() => setHovered(false)}
     >
       <div className="aspect-video bg-surface-deep flex items-center justify-center">
@@ -64,6 +101,15 @@ export function WindowCard({
             className="max-w-full max-h-full object-contain"
             draggable={false}
           />
+          <button
+            onPointerDown={(e) => e.preventDefault()}
+            onClick={handleSave}
+            className="absolute bottom-3 right-3 p-2 rounded bg-surface-alt/90 border border-border
+                       text-content-muted hover:text-content hover:bg-surface transition-colors"
+            title={t("card.save")}
+          >
+            <Download size={16} />
+          </button>
         </div>
       )}
     </div>

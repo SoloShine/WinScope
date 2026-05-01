@@ -9,6 +9,64 @@ use windows_capture::capture::{Context, GraphicsCaptureApiHandler};
 use windows_capture::frame::Frame;
 use windows_capture::graphics_capture_api::InternalCaptureControl;
 
+/// One-shot full-resolution capture for saving screenshots.
+pub struct OneShotCapture {
+    tx: Option<std::sync::mpsc::Sender<Result<Vec<u8>, String>>>,
+}
+
+impl GraphicsCaptureApiHandler for OneShotCapture {
+    type Flags = std::sync::mpsc::Sender<Result<Vec<u8>, String>>;
+    type Error = Box<dyn std::error::Error + Send + Sync>;
+
+    fn new(ctx: Context<Self::Flags>) -> Result<Self, Self::Error> {
+        Ok(Self { tx: Some(ctx.flags) })
+    }
+
+    fn on_frame_arrived(
+        &mut self,
+        frame: &mut Frame,
+        capture_control: InternalCaptureControl,
+    ) -> Result<(), Self::Error> {
+        let width = frame.width();
+        let height = frame.height();
+        if width == 0 || height == 0 {
+            return Ok(());
+        }
+
+        let mut buffer = frame.buffer()?;
+        let raw = buffer.as_nopadding_buffer()?;
+        let mut rgba = raw.to_vec();
+        convert_bgra_to_rgba(&mut rgba);
+
+        let result = match image::RgbaImage::from_raw(width, height, rgba) {
+            Some(img) => {
+                let mut png_data = Vec::new();
+                match img.write_to(
+                    &mut Cursor::new(&mut png_data),
+                    image::ImageFormat::Png,
+                ) {
+                    Ok(()) => Ok(png_data),
+                    Err(e) => Err(format!("PNG encode failed: {}", e)),
+                }
+            }
+            None => Err("Failed to create image".into()),
+        };
+
+        if let Some(tx) = self.tx.take() {
+            let _ = tx.send(result);
+        }
+        capture_control.stop();
+        Ok(())
+    }
+
+    fn on_closed(&mut self) -> Result<(), Self::Error> {
+        if let Some(tx) = self.tx.take() {
+            let _ = tx.send(Err("Window closed before capture".into()));
+        }
+        Ok(())
+    }
+}
+
 #[derive(Clone, Serialize)]
 pub struct CapturePayload {
     pub title: String,

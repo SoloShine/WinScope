@@ -72,10 +72,10 @@ describe("Keyboard Shortcuts", () => {
     expect(await pauseBtn.isDisplayed()).toBe(true);
   });
 
-  it("Ctrl+S is prevented", async () => {
+  it("Ctrl+S does not crash when no card hovered", async () => {
     await browser.keys(["Control", "s"]);
     await browser.pause(200);
-    const pauseBtn = await $("//button[contains(@title,'暂停')]");
+    const pauseBtn = await $("//button[contains(@title,'暂停') or contains(@title,'Pause')]");
     expect(await pauseBtn.isDisplayed()).toBe(true);
   });
 

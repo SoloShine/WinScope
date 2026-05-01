@@ -8,6 +8,7 @@ import {
   MAX_WIDTH,
   ZOOM_STEP,
 } from "./components/WindowGrid";
+import { saveImage } from "./components/WindowCard";
 
 import { Toolbar } from "./components/Toolbar";
 import { SettingsPanel } from "./components/SettingsPanel";
@@ -58,10 +59,13 @@ function App() {
   const pausedRef = useRef(capture.paused);
   const configRef = useRef(capture.config);
   const isFullscreenRef = useRef(isFullscreen);
+  const hoveredCardRef = useRef<string | null>(null);
+  const capturesRef = useRef(capture.captures);
 
   pausedRef.current = capture.paused;
   configRef.current = capture.config;
   isFullscreenRef.current = isFullscreen;
+  capturesRef.current = capture.captures;
 
   // Keyboard shortcuts — registered once
   useEffect(() => {
@@ -125,6 +129,13 @@ function App() {
 
       if (e.key.toLowerCase() === "s" && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
+        const hovered = hoveredCardRef.current;
+        if (hovered) {
+          const img = capturesRef.current.get(hovered);
+          if (img) {
+            saveImage(hovered, img).catch(console.error);
+          }
+        }
         return;
       }
 
@@ -167,6 +178,7 @@ function App() {
           cardWidth={cardWidth}
           setCardWidth={setCardWidth}
           onBringToFront={capture.bringToFront}
+          onCardHover={(title) => { hoveredCardRef.current = title; }}
         />
         {showSettings && (
           <SettingsPanel

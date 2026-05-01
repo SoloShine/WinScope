@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
@@ -10,6 +10,11 @@ export function useCapture() {
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [activeCaptures, setActiveCaptures] = useState<Set<string>>(new Set());
   const [paused, setPaused] = useState(false);
+
+  const configRef = useRef(config);
+  const activeCapturesRef = useRef(activeCaptures);
+  configRef.current = config;
+  activeCapturesRef.current = activeCaptures;
 
   // Load initial data
   useEffect(() => {
@@ -83,12 +88,29 @@ export function useCapture() {
     };
   }, [paused]);
 
-  // Refresh window list periodically
+  // Refresh window list periodically + auto-start matching captures
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
         const windowList = await invoke<WindowInfo[]>("get_windows");
         setWindows(windowList);
+
+        // Auto-start captures for new windows matching monitored_windows
+        const cfg = configRef.current;
+        if (cfg && cfg.monitored_windows.length > 0) {
+          const monitored = new Set(cfg.monitored_windows);
+          const active = activeCapturesRef.current;
+          for (const w of windowList) {
+            if (monitored.has(w.process_name) && !active.has(w.title)) {
+              try {
+                await invoke("start_capture", { windowTitle: w.title });
+                setActiveCaptures((prev) => new Set(prev).add(w.title));
+              } catch {
+                // Window might not support capture
+              }
+            }
+          }
+        }
       } catch {
         // Window enumeration might fail transiently
       }

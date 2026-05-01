@@ -2,6 +2,7 @@ mod capture;
 pub mod config;
 mod windows;
 
+use base64::Engine;
 use config::AppConfig;
 use std::collections::HashMap;
 use std::sync::Mutex;
@@ -117,6 +118,9 @@ fn start_capture(
             eprintln!("Capture error for '{}': {}", title_clone, e);
         }
         let _ = app_handle.emit("capture-closed", &title_clone);
+        // Clean up stale entry so re-capture can succeed
+        let state = app_handle.state::<AppState>();
+        state.stop_senders.lock().unwrap().remove(&title_clone);
     });
 
     Ok(())
@@ -134,6 +138,46 @@ fn stop_capture(state: State<'_, AppState>, window_title: String) -> Result<(), 
             window_title
         )),
     }
+}
+
+#[tauri::command]
+fn save_screenshot(path: String, base64_data: String) -> Result<(), String> {
+    let data = base64::engine::general_purpose::STANDARD
+        .decode(&base64_data)
+        .map_err(|e| format!("Failed to decode base64: {}", e))?;
+    std::fs::write(&path, data).map_err(|e| format!("Failed to write file: {}", e))
+}
+
+#[tauri::command]
+fn capture_full_screenshot(window_title: String) -> Result<String, String> {
+    let win = Window::from_contains_name(&window_title)
+        .map_err(|e| format!("Failed to find window '{}': {}", window_title, e))?;
+
+    let (tx, rx) = std::sync::mpsc::channel::<Result<Vec<u8>, String>>();
+
+    let settings = Settings::new(
+        win,
+        CursorCaptureSettings::WithoutCursor,
+        DrawBorderSettings::WithoutBorder,
+        SecondaryWindowSettings::Default,
+        MinimumUpdateIntervalSettings::Default,
+        DirtyRegionSettings::Default,
+        ColorFormat::Bgra8,
+        tx,
+    );
+
+    std::thread::spawn(move || {
+        if let Err(e) = capture::OneShotCapture::start(settings) {
+            eprintln!("One-shot capture error: {}", e);
+        }
+    });
+
+    let png_data = rx
+        .recv_timeout(Duration::from_secs(5))
+        .map_err(|_| "Capture timed out".to_string())?
+        .map_err(|e| format!("Capture failed: {}", e))?;
+
+    Ok(base64::engine::general_purpose::STANDARD.encode(&png_data))
 }
 
 #[tauri::command]
@@ -175,6 +219,7 @@ pub fn run() {
 
             Ok(())
         })
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             get_windows,
             get_config,
@@ -182,7 +227,9 @@ pub fn run() {
             set_title_bar_theme,
             start_capture,
             stop_capture,
-            bring_to_front
+            bring_to_front,
+            save_screenshot,
+            capture_full_screenshot
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

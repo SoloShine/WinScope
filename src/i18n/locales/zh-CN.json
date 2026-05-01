@@ -31,5 +31,6 @@
   "controls.exitFullscreen": "退出全屏",
   "controls.zoomIn": "放大",
   "controls.zoomOut": "缩小",
-  "controls.zoomReset": "重置缩放"
+  "controls.zoomReset": "重置缩放",
+  "card.save": "保存截图 (Ctrl+S)"
 }
