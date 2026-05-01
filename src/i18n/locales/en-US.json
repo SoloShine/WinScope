@@ -32,5 +32,7 @@
   "controls.zoomIn": "Zoom In",
   "controls.zoomOut": "Zoom Out",
   "controls.zoomReset": "Reset Zoom",
-  "card.save": "Save Screenshot (Ctrl+S)"
+  "card.save": "Save Screenshot (Ctrl+S)",
+  "grid.allTags": "All",
+  "settings.tagPlaceholder": "Tags, comma separated"
 }

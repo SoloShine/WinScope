@@ -12,6 +12,7 @@ export interface CapturePayload {
 export interface AppConfig {
   monitored_windows: string[];
   hidden_windows: string[];
+  window_tags: Record<string, string[]>;
   refresh_interval_ms: number;
   always_on_top: boolean;
   window_geometry: {

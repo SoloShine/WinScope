@@ -32,5 +32,7 @@
   "controls.zoomIn": "放大",
   "controls.zoomOut": "缩小",
   "controls.zoomReset": "重置缩放",
-  "card.save": "保存截图 (Ctrl+S)"
+  "card.save": "保存截图 (Ctrl+S)",
+  "grid.allTags": "全部",
+  "settings.tagPlaceholder": "标签，逗号分隔"
 }

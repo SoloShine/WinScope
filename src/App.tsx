@@ -175,6 +175,7 @@ function App() {
           captures={capture.captures}
           activeCaptures={capture.activeCaptures}
           hiddenWindows={capture.config.hidden_windows}
+          windowTags={capture.config.window_tags}
           cardWidth={cardWidth}
           setCardWidth={setCardWidth}
           onBringToFront={capture.bringToFront}

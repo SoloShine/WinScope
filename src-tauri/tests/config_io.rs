@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fs;
 
 use window_monitor_lib::config::AppConfig;
@@ -11,6 +12,7 @@ fn save_and_load_config_roundtrip() {
     let config = AppConfig {
         monitored_windows: vec!["notepad".to_string(), "chrome".to_string()],
         hidden_windows: vec!["explorer".to_string()],
+        window_tags: HashMap::new(),
         refresh_interval_ms: 2000,
         always_on_top: true,
         window_geometry: Some(WindowGeometry {

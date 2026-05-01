@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 use tauri::Manager;
@@ -17,6 +18,8 @@ pub struct AppConfig {
     pub monitored_windows: Vec<String>,
     #[serde(default)]
     pub hidden_windows: Vec<String>,
+    #[serde(default)]
+    pub window_tags: HashMap<String, Vec<String>>,
     #[serde(default = "default_interval")]
     pub refresh_interval_ms: u64,
     #[serde(default)]
@@ -34,6 +37,7 @@ impl Default for AppConfig {
         Self {
             monitored_windows: Vec::new(),
             hidden_windows: Vec::new(),
+            window_tags: HashMap::new(),
             refresh_interval_ms: 1500,
             always_on_top: false,
             window_geometry: None,
@@ -78,9 +82,12 @@ mod tests {
 
     #[test]
     fn serialize_deserialize_roundtrip() {
+        let mut tags = HashMap::new();
+        tags.insert("notepad".to_string(), vec!["work".to_string()]);
         let config = AppConfig {
             monitored_windows: vec!["notepad".to_string()],
             hidden_windows: vec!["explorer".to_string()],
+            window_tags: tags,
             refresh_interval_ms: 2000,
             always_on_top: true,
             window_geometry: Some(WindowGeometry {

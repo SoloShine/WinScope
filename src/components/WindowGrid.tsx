@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { WindowInfo } from "../types";
 import { WindowCard } from "./WindowCard";
 import { useTranslation } from "../i18n/index.tsx";
@@ -25,6 +25,7 @@ interface WindowGridProps {
   captures: Map<string, string>;
   activeCaptures: Set<string>;
   hiddenWindows: string[];
+  windowTags: Record<string, string[]>;
   cardWidth: number;
   setCardWidth: (updater: number | ((prev: number) => number)) => void;
   onBringToFront: (title: string) => void;
@@ -36,6 +37,7 @@ export function WindowGrid({
   captures,
   activeCaptures,
   hiddenWindows,
+  windowTags,
   cardWidth: _cardWidth,
   setCardWidth,
   onBringToFront,
@@ -43,6 +45,7 @@ export function WindowGrid({
 }: WindowGridProps) {
   void _cardWidth;
   const { t } = useTranslation();
+  const [activeTag, setActiveTag] = useState<string | null>(null);
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
     if (e.ctrlKey || e.metaKey) {
@@ -52,13 +55,35 @@ export function WindowGrid({
     }
   }, [setCardWidth]);
 
-  const visibleWindows = windows.filter(
+  const activeWindows = windows.filter(
     (w) =>
       activeCaptures.has(w.title) &&
       !hiddenWindows.includes(w.process_name)
   );
 
-  if (visibleWindows.length === 0) {
+  // Collect all unique tags from visible windows
+  const allTags = useMemo(() => {
+    const tagSet = new Set<string>();
+    for (const w of activeWindows) {
+      const tags = windowTags[w.process_name];
+      if (tags) {
+        for (const tag of tags) tagSet.add(tag);
+      }
+    }
+    return Array.from(tagSet).sort();
+  }, [activeWindows, windowTags]);
+
+  // Filter by selected tag
+  const visibleWindows = activeTag
+    ? activeWindows.filter(
+        (w) => {
+          const tags = windowTags[w.process_name];
+          return tags && tags.includes(activeTag);
+        }
+      )
+    : activeWindows;
+
+  if (activeWindows.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center text-content-muted">
         <div className="text-center">
@@ -74,6 +99,33 @@ export function WindowGrid({
       className="flex-1 overflow-auto p-4"
       onWheel={handleWheel}
     >
+      {allTags.length > 0 && (
+        <div className="flex items-center gap-1.5 mb-3 flex-wrap">
+          <button
+            onClick={() => setActiveTag(null)}
+            className={`px-2 py-0.5 rounded text-xs transition-colors ${
+              activeTag === null
+                ? "bg-blue-600 text-white"
+                : "bg-surface-alt border border-border text-content-muted hover:text-content"
+            }`}
+          >
+            {t("grid.allTags")}
+          </button>
+          {allTags.map((tag) => (
+            <button
+              key={tag}
+              onClick={() => setActiveTag(activeTag === tag ? null : tag)}
+              className={`px-2 py-0.5 rounded text-xs transition-colors ${
+                activeTag === tag
+                  ? "bg-blue-600 text-white"
+                  : "bg-surface-alt border border-border text-content-muted hover:text-content"
+              }`}
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
+      )}
       <div
         className="grid gap-4 auto-rows-min"
         style={{
