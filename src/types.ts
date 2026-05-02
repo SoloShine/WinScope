@@ -2,6 +2,7 @@ export interface WindowInfo {
   title: string;
   process_name: string;
   process_id: number;
+  monitor_id: string;
 }
 
 export interface CapturePayload {
@@ -12,6 +13,18 @@ export interface CapturePayload {
 export interface HistoryEntry {
   timestamp: number;
   image: string;
+}
+
+export interface MonitorInfo {
+  id: string;
+  name: string;
+  rect: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+  isPrimary: boolean;
 }
 
 export interface AppConfig {
@@ -27,4 +40,5 @@ export interface AppConfig {
     height: number;
   } | null;
   max_history_entries: number;
+  enabled_monitors: string[];
 }
