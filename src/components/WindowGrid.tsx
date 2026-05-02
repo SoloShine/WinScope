@@ -30,6 +30,7 @@ interface WindowGridProps {
   setCardWidth: (updater: number | ((prev: number) => number)) => void;
   onBringToFront: (title: string) => void;
   onCardHover?: (title: string | null) => void;
+  onShowHistory?: (title: string) => void;
 }
 
 export function WindowGrid({
@@ -42,6 +43,7 @@ export function WindowGrid({
   setCardWidth,
   onBringToFront,
   onCardHover,
+  onShowHistory,
 }: WindowGridProps) {
   void _cardWidth;
   const { t } = useTranslation();
@@ -141,6 +143,7 @@ export function WindowGrid({
             isCapturing={activeCaptures.has(w.title)}
             onDoubleClick={() => onBringToFront(w.title)}
             onHover={onCardHover}
+            onShowHistory={onShowHistory}
           />
         ))}
       </div>
