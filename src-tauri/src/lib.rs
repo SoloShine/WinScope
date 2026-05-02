@@ -8,6 +8,7 @@ use std::collections::HashMap;
 use std::sync::Mutex;
 use std::time::Duration;
 use tauri::{Emitter, Manager, State};
+use tauri::tray::TrayIconBuilder;
 use ::windows::Win32::Foundation::HWND;
 use ::windows::Win32::Graphics::Dwm::{DwmSetWindowAttribute, DWMWA_USE_IMMERSIVE_DARK_MODE};
 use ::windows::Win32::UI::WindowsAndMessaging::{
@@ -36,6 +37,63 @@ fn apply_title_bar_dark(hwnd: HWND, dark: bool) {
             std::mem::size_of::<i32>() as u32,
         );
     }
+}
+
+fn setup_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+    use tauri::menu::{Menu, MenuItem};
+
+    let show_item = MenuItem::with_id(app, "show", "显示主窗口", true, None::<&str>)?;
+    let pause_item = MenuItem::with_id(app, "pause", "暂停截图", true, None::<&str>)?;
+    let top_item = MenuItem::with_id(app, "top", "窗口置顶", true, None::<&str>)?;
+    let quit_item = MenuItem::with_id(app, "quit", "退出", true, None::<&str>)?;
+
+    let menu = Menu::with_items(app, &[&show_item, &pause_item, &top_item, &quit_item])?;
+
+    let _tray = TrayIconBuilder::new()
+        .icon(app.default_window_icon().unwrap().clone())
+        .tooltip("WinScope")
+        .menu(&menu)
+        .on_tray_icon_event(|tray, event| {
+            if let tauri::tray::TrayIconEvent::Click {
+                button: tauri::tray::MouseButton::Left,
+                button_state: tauri::tray::MouseButtonState::Up,
+                ..
+            } = event
+            {
+                let app = tray.app_handle();
+                if let Some(window) = app.get_webview_window("main") {
+                    if window.is_visible().unwrap_or(false) {
+                        let _ = window.hide();
+                    } else {
+                        let _ = window.show();
+                        let _ = window.set_focus();
+                    }
+                }
+            }
+        })
+        .on_menu_event(|app, event| {
+            match event.id().as_ref() {
+                "show" => {
+                    if let Some(window) = app.get_webview_window("main") {
+                        let _ = window.show();
+                        let _ = window.set_focus();
+                    }
+                }
+                "pause" => {
+                    let _ = app.emit("toggle-pause", ());
+                }
+                "top" => {
+                    let _ = app.emit("toggle-always-on-top", ());
+                }
+                "quit" => {
+                    app.exit(0);
+                }
+                _ => {}
+            }
+        })
+        .build(app)?;
+
+    Ok(())
 }
 
 #[tauri::command]
@@ -200,6 +258,14 @@ fn bring_to_front(window_title: String) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+fn minimize_to_tray(app: tauri::AppHandle) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("main") {
+        window.hide().map_err(|e| format!("Failed to hide window: {}", e))?;
+    }
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -217,6 +283,9 @@ pub fn run() {
                 }
             }
 
+            // Setup system tray
+            setup_tray(app)?;
+
             Ok(())
         })
         .plugin(tauri_plugin_dialog::init())
@@ -230,7 +299,8 @@ pub fn run() {
             stop_capture,
             bring_to_front,
             save_screenshot,
-            capture_full_screenshot
+            capture_full_screenshot,
+            minimize_to_tray
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
