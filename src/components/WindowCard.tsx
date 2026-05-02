@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Download } from "lucide-react";
+import { Download, History } from "lucide-react";
 import { save } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
 import { useTranslation } from "../i18n/index.tsx";
@@ -11,6 +11,7 @@ interface WindowCardProps {
   isCapturing: boolean;
   onDoubleClick: () => void;
   onHover?: (title: string | null) => void;
+  onShowHistory?: (title: string) => void;
 }
 
 function formatTimestamp() {
@@ -42,6 +43,7 @@ export function WindowCard({
   isCapturing,
   onDoubleClick,
   onHover,
+  onShowHistory,
 }: WindowCardProps) {
   const [hovered, setHovered] = useState(false);
   const { t } = useTranslation();
@@ -101,15 +103,31 @@ export function WindowCard({
             className="max-w-full max-h-full object-contain"
             draggable={false}
           />
-          <button
-            onPointerDown={(e) => e.preventDefault()}
-            onClick={handleSave}
-            className="absolute bottom-3 right-3 p-2 rounded bg-surface-alt/90 border border-border
-                       text-content-muted hover:text-content hover:bg-surface transition-colors"
-            title={t("card.save")}
-          >
-            <Download size={16} />
-          </button>
+          <div className="absolute bottom-3 right-3 flex gap-2">
+            {onShowHistory && (
+              <button
+                onPointerDown={(e) => e.preventDefault()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onShowHistory(title);
+                }}
+                className="p-2 rounded bg-surface-alt/90 border border-border
+                           text-content-muted hover:text-content hover:bg-surface transition-colors"
+                title={t("history.view")}
+              >
+                <History size={16} />
+              </button>
+            )}
+            <button
+              onPointerDown={(e) => e.preventDefault()}
+              onClick={handleSave}
+              className="p-2 rounded bg-surface-alt/90 border border-border
+                         text-content-muted hover:text-content hover:bg-surface transition-colors"
+              title={t("card.save")}
+            >
+              <Download size={16} />
+            </button>
+          </div>
         </div>
       )}
     </div>
