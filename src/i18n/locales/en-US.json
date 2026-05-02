@@ -38,5 +38,10 @@
   "tray.show": "Show Main Window",
   "tray.pause": "Pause Capture",
   "tray.top": "Always on Top",
-  "tray.quit": "Quit"
+  "tray.quit": "Quit",
+  "history.title": "History",
+  "history.live": "Live",
+  "history.noHistory": "No history screenshots",
+  "history.view": "View History",
+  "history.time": "Time"
 }

@@ -38,5 +38,10 @@
   "tray.show": "显示主窗口",
   "tray.pause": "暂停截图",
   "tray.top": "窗口置顶",
-  "tray.quit": "退出"
+  "tray.quit": "退出",
+  "history.title": "历史记录",
+  "history.live": "实时",
+  "history.noHistory": "暂无历史截图",
+  "history.view": "查看历史",
+  "history.time": "时间"
 }
