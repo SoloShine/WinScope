@@ -9,6 +9,11 @@ export interface CapturePayload {
   image: string;
 }
 
+export interface HistoryEntry {
+  timestamp: number;
+  image: string;
+}
+
 export interface AppConfig {
   monitored_windows: string[];
   hidden_windows: string[];
@@ -21,4 +26,5 @@ export interface AppConfig {
     width: number;
     height: number;
   } | null;
+  max_history_entries: number;
 }
