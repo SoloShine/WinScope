@@ -49,7 +49,7 @@ unsafe extern "system" fn enum_monitors_callback(
         
         let rect = monitor_info.monitorInfo.rcMonitor;
         let monitor = MonitorInfo {
-            id: format!("monitor_{}", data.monitors.len()),
+            id: name.clone(),
             name,
             rect: MonitorRect {
                 x: rect.left,
