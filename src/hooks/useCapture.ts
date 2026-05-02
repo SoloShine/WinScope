@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import type { WindowInfo, CapturePayload, AppConfig } from "../types";
+import { useHistory } from "./useHistory";
 
 export function useCapture() {
   const [windows, setWindows] = useState<WindowInfo[]>([]);
@@ -10,6 +11,8 @@ export function useCapture() {
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [activeCaptures, setActiveCaptures] = useState<Set<string>>(new Set());
   const [paused, setPaused] = useState(false);
+
+  const history = useHistory();
 
   const configRef = useRef(config);
   const activeCapturesRef = useRef(activeCaptures);
@@ -66,27 +69,32 @@ export function useCapture() {
         next.delete(title);
         return next;
       });
+      // Clear history when window is closed
+      history.clearHistory(title);
     });
     return () => {
       unlisten.then((fn) => fn());
     };
-  }, []);
+  }, [history.clearHistory]);
 
   // Listen for capture updates
   useEffect(() => {
     const unlisten = listen<CapturePayload>("capture-update", (event) => {
       if (!paused) {
+        const { title, image } = event.payload;
         setCaptures((prev) => {
           const next = new Map(prev);
-          next.set(event.payload.title, event.payload.image);
+          next.set(title, image);
           return next;
         });
+        // Add to history
+        history.addEntry(title, image);
       }
     });
     return () => {
       unlisten.then((fn) => fn());
     };
-  }, [paused]);
+  }, [paused, history.addEntry]);
 
   // Refresh window list periodically + auto-start matching captures
   useEffect(() => {
@@ -189,5 +197,6 @@ export function useCapture() {
     stopCapture,
     bringToFront,
     updateConfig,
+    history,
   };
 }
