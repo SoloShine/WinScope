@@ -26,6 +26,8 @@ pub struct AppConfig {
     pub always_on_top: bool,
     #[serde(default)]
     pub window_geometry: Option<WindowGeometry>,
+    #[serde(default)]
+    pub enabled_monitors: Vec<String>,
 }
 
 fn default_interval() -> u64 {
@@ -41,6 +43,7 @@ impl Default for AppConfig {
             refresh_interval_ms: 1500,
             always_on_top: false,
             window_geometry: None,
+            enabled_monitors: Vec::new(),
         }
     }
 }

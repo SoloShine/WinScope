@@ -1,6 +1,7 @@
 mod capture;
 pub mod config;
 mod windows;
+mod monitors;
 
 use base64::Engine;
 use config::AppConfig;
@@ -21,6 +22,7 @@ use windows_capture::settings::{
 };
 use windows_capture::window::Window;
 use windows::WindowInfo;
+use monitors::MonitorInfo;
 
 struct AppState {
     config: Mutex<AppConfig>,
@@ -266,6 +268,23 @@ fn minimize_to_tray(app: tauri::AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+fn get_monitors() -> Result<Vec<MonitorInfo>, String> {
+    monitors::enumerate_monitors()
+}
+
+#[tauri::command]
+fn update_enabled_monitors(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+    monitor_ids: Vec<String>,
+) -> Result<(), String> {
+    let mut config = state.config.lock().unwrap();
+    config.enabled_monitors = monitor_ids;
+    config::save_config(&app, &config)?;
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -300,7 +319,9 @@ pub fn run() {
             bring_to_front,
             save_screenshot,
             capture_full_screenshot,
-            minimize_to_tray
+            minimize_to_tray,
+            get_monitors,
+            update_enabled_monitors
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

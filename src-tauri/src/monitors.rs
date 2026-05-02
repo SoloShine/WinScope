@@ -3,13 +3,22 @@ use windows::Win32::Graphics::Gdi::{
     EnumDisplayMonitors, GetMonitorInfoW, HDC, HMONITOR,
     MONITORINFOEXW,
 };
-use windows::Win32::Foundation::{BOOL, LPARAM, RECT};
+use windows::Win32::Foundation::{LPARAM, RECT};
+use windows::core::BOOL;
+
+#[derive(Clone, Serialize)]
+pub struct MonitorRect {
+    pub x: i32,
+    pub y: i32,
+    pub width: i32,
+    pub height: i32,
+}
 
 #[derive(Clone, Serialize)]
 pub struct MonitorInfo {
     pub id: String,
     pub name: String,
-    pub rect: RECT,
+    pub rect: MonitorRect,
     pub is_primary: bool,
 }
 
@@ -38,10 +47,16 @@ unsafe extern "system" fn enum_monitors_callback(
         
         let is_primary = (monitor_info.monitorInfo.dwFlags & 1) != 0; // MONITORINFOF_PRIMARY
         
+        let rect = monitor_info.monitorInfo.rcMonitor;
         let monitor = MonitorInfo {
             id: format!("monitor_{}", data.monitors.len()),
             name,
-            rect: monitor_info.monitorInfo.rcMonitor,
+            rect: MonitorRect {
+                x: rect.left,
+                y: rect.top,
+                width: rect.right - rect.left,
+                height: rect.bottom - rect.top,
+            },
             is_primary,
         };
         
@@ -58,7 +73,7 @@ pub fn enumerate_monitors() -> Result<Vec<MonitorInfo>, String> {
     
     unsafe {
         if !EnumDisplayMonitors(
-            HDC::default(),
+            Some(HDC::default()),
             None,
             Some(enum_monitors_callback),
             LPARAM(&mut data as *mut _ as isize),
