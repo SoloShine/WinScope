@@ -21,6 +21,7 @@ fn save_and_load_config_roundtrip() {
             width: 1024,
             height: 768,
         }),
+        enabled_monitors: vec!["monitor_0".to_string()],
     };
 
     // Save

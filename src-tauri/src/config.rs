@@ -99,6 +99,7 @@ mod tests {
                 width: 800,
                 height: 600,
             }),
+            enabled_monitors: vec!["monitor_0".to_string()],
         };
         let json = serde_json::to_string(&config).unwrap();
         let loaded: AppConfig = serde_json::from_str(&json).unwrap();
