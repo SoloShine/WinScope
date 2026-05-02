@@ -34,5 +34,9 @@
   "controls.zoomReset": "重置缩放",
   "card.save": "保存截图 (Ctrl+S)",
   "grid.allTags": "全部",
-  "settings.tagPlaceholder": "标签，逗号分隔"
+  "settings.tagPlaceholder": "标签，逗号分隔",
+  "tray.show": "显示主窗口",
+  "tray.pause": "暂停截图",
+  "tray.top": "窗口置顶",
+  "tray.quit": "退出"
 }

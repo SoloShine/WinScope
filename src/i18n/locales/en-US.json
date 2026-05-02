@@ -34,5 +34,9 @@
   "controls.zoomReset": "Reset Zoom",
   "card.save": "Save Screenshot (Ctrl+S)",
   "grid.allTags": "All",
-  "settings.tagPlaceholder": "Tags, comma separated"
+  "settings.tagPlaceholder": "Tags, comma separated",
+  "tray.show": "Show Main Window",
+  "tray.pause": "Pause Capture",
+  "tray.top": "Always on Top",
+  "tray.quit": "Quit"
 }
