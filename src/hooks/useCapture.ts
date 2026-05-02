@@ -19,6 +19,14 @@ export function useCapture() {
   configRef.current = config;
   activeCapturesRef.current = activeCaptures;
 
+  // Filter windows by enabled monitors
+  const filteredWindows = windows.filter((w) => {
+    if (!config || config.enabled_monitors.length === 0) {
+      return true; // No filter applied
+    }
+    return config.enabled_monitors.includes(w.monitor_id);
+  });
+
   // Load initial data
   useEffect(() => {
     async function load() {
@@ -187,7 +195,7 @@ export function useCapture() {
   }, []);
 
   return {
-    windows,
+    windows: filteredWindows,
     captures,
     config,
     activeCaptures,
