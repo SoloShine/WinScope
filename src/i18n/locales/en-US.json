@@ -43,5 +43,9 @@
   "history.live": "Live",
   "history.noHistory": "No history screenshots",
   "history.view": "View History",
-  "history.time": "Time"
+  "history.time": "Time",
+  "monitors.title": "Monitor Selection",
+  "monitors.primary": "Primary Monitor",
+  "monitors.loading": "Loading monitors...",
+  "monitors.notFound": "No monitors detected"
 }

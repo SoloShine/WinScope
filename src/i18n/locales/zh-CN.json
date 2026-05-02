@@ -43,5 +43,9 @@
   "history.live": "实时",
   "history.noHistory": "暂无历史截图",
   "history.view": "查看历史",
-  "history.time": "时间"
+  "history.time": "时间",
+  "monitors.title": "显示器选择",
+  "monitors.primary": "主显示器",
+  "monitors.loading": "加载显示器中...",
+  "monitors.notFound": "未检测到显示器"
 }
