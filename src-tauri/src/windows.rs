@@ -1,6 +1,8 @@
 use serde::Serialize;
 use windows_capture::window::Window;
+use windows::Win32::Foundation::HWND;
 use windows::Win32::Graphics::Gdi::{GetMonitorInfoW, MonitorFromWindow, MONITORINFOEXW, MONITOR_DEFAULTTONEAREST};
+use windows::Win32::UI::WindowsAndMessaging::IsIconic;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct WindowInfo {
@@ -11,8 +13,6 @@ pub struct WindowInfo {
 }
 
 fn get_window_monitor_id(hwnd: *mut std::ffi::c_void) -> Option<String> {
-    use windows::Win32::Foundation::HWND;
-    
     unsafe {
         let hwnd = HWND(hwnd as *mut _);
         let hmonitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
@@ -64,5 +64,13 @@ pub fn enumerate_windows() -> Vec<WindowInfo> {
             eprintln!("Failed to enumerate windows: {}", e);
             Vec::new()
         }
+    }
+}
+
+/// Check if a window is minimized (iconic state).
+pub fn is_window_minimized(hwnd: isize) -> bool {
+    unsafe {
+        let hwnd = HWND(hwnd as *mut _);
+        IsIconic(hwnd).as_bool()
     }
 }

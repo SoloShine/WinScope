@@ -279,13 +279,16 @@ function App() {
           windows={capture.windows}
           captures={capture.captures}
           activeCaptures={capture.activeCaptures}
+          minimizedWindows={capture.minimizedWindows}
           hiddenWindows={capture.config.hidden_windows}
           windowTags={capture.config.window_tags}
+          forceCaptureMinimized={capture.config.force_capture_minimized}
           cardWidth={cardWidth}
           setCardWidth={setCardWidth}
           onBringToFront={capture.bringToFront}
           onCardHover={(title) => { hoveredCardRef.current = title; }}
           onShowHistory={handleShowHistory}
+          onToggleForceCapture={capture.toggleForceCaptureMinimized}
         />
         {showSettings && (
           <SettingsPanel

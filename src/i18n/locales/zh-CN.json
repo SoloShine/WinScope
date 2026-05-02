@@ -47,5 +47,9 @@
   "monitors.title": "显示器选择",
   "monitors.primary": "主显示器",
   "monitors.loading": "加载显示器中...",
-  "monitors.notFound": "未检测到显示器"
+  "monitors.notFound": "未检测到显示器",
+  "card.minimized": "窗口已最小化",
+  "card.forceCaptureMinimized": "强制截取最小化窗口",
+  "card.forceOn": "强制截图已开启",
+  "card.forceOff": "开启强制截图"
 }

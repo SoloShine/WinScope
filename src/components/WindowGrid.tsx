@@ -24,26 +24,32 @@ interface WindowGridProps {
   windows: WindowInfo[];
   captures: Map<string, string>;
   activeCaptures: Set<string>;
+  minimizedWindows: Set<string>;
   hiddenWindows: string[];
   windowTags: Record<string, string[]>;
+  forceCaptureMinimized: Record<string, boolean>;
   cardWidth: number;
   setCardWidth: (updater: number | ((prev: number) => number)) => void;
   onBringToFront: (title: string) => void;
   onCardHover?: (title: string | null) => void;
   onShowHistory?: (title: string) => void;
+  onToggleForceCapture?: (title: string, enabled: boolean) => void;
 }
 
 export function WindowGrid({
   windows,
   captures,
   activeCaptures,
+  minimizedWindows,
   hiddenWindows,
   windowTags,
+  forceCaptureMinimized,
   cardWidth: _cardWidth,
   setCardWidth,
   onBringToFront,
   onCardHover,
   onShowHistory,
+  onToggleForceCapture,
 }: WindowGridProps) {
   void _cardWidth;
   const { t } = useTranslation();
@@ -141,9 +147,12 @@ export function WindowGrid({
             processName={w.process_name}
             imageBase64={captures.get(w.title)}
             isCapturing={activeCaptures.has(w.title)}
+            isMinimized={minimizedWindows.has(w.title)}
+            forceCaptureMinimized={forceCaptureMinimized[w.title] ?? false}
             onDoubleClick={() => onBringToFront(w.title)}
             onHover={onCardHover}
             onShowHistory={onShowHistory}
+            onToggleForceCapture={onToggleForceCapture}
           />
         ))}
       </div>

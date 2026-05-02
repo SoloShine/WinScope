@@ -11,6 +11,7 @@ export function useCapture() {
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [activeCaptures, setActiveCaptures] = useState<Set<string>>(new Set());
   const [paused, setPaused] = useState(false);
+  const [minimizedWindows, setMinimizedWindows] = useState<Set<string>>(new Set());
 
   const history = useHistory();
 
@@ -77,6 +78,11 @@ export function useCapture() {
         next.delete(title);
         return next;
       });
+      setMinimizedWindows((prev) => {
+        const next = new Set(prev);
+        next.delete(title);
+        return next;
+      });
       // Clear history when window is closed
       history.clearHistory(title);
     });
@@ -84,6 +90,24 @@ export function useCapture() {
       unlisten.then((fn) => fn());
     };
   }, [history.clearHistory]);
+
+  // Listen for capture-minimized events
+  useEffect(() => {
+    const unlisten = listen<string>("capture-minimized", (event) => {
+      const title = event.payload;
+      console.log("[capture-minimized]", title);
+      setMinimizedWindows((prev) => new Set(prev).add(title));
+      // Clear stale image so the minimized UI shows instead
+      setCaptures((prev) => {
+        const next = new Map(prev);
+        next.delete(title);
+        return next;
+      });
+    });
+    return () => {
+      unlisten.then((fn) => fn());
+    };
+  }, []);
 
   // Listen for capture updates
   useEffect(() => {
@@ -93,6 +117,13 @@ export function useCapture() {
         setCaptures((prev) => {
           const next = new Map(prev);
           next.set(title, image);
+          return next;
+        });
+        // Window is capturing again — clear minimized status
+        setMinimizedWindows((prev) => {
+          if (!prev.has(title)) return prev;
+          const next = new Set(prev);
+          next.delete(title);
           return next;
         });
         // Add to history
@@ -194,17 +225,37 @@ export function useCapture() {
     }
   }, []);
 
+  const toggleForceCaptureMinimized = useCallback(async (title: string, enabled: boolean) => {
+    try {
+      await invoke("toggle_force_capture_minimized", { windowTitle: title, enabled });
+      if (config) {
+        const newConfig = {
+          ...config,
+          force_capture_minimized: {
+            ...config.force_capture_minimized,
+            [title]: enabled,
+          },
+        };
+        setConfig(newConfig);
+      }
+    } catch (e) {
+      console.error("Failed to toggle force capture minimized:", e);
+    }
+  }, [config]);
+
   return {
     windows: filteredWindows,
     captures,
     config,
     activeCaptures,
     paused,
+    minimizedWindows,
     setPaused,
     startCapture,
     stopCapture,
     bringToFront,
     updateConfig,
+    toggleForceCaptureMinimized,
     history,
   };
 }

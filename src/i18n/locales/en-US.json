@@ -47,5 +47,9 @@
   "monitors.title": "Monitor Selection",
   "monitors.primary": "Primary Monitor",
   "monitors.loading": "Loading monitors...",
-  "monitors.notFound": "No monitors detected"
+  "monitors.notFound": "No monitors detected",
+  "card.minimized": "Window minimized",
+  "card.forceCaptureMinimized": "Force capture minimized window",
+  "card.forceOn": "Force capture ON",
+  "card.forceOff": "Enable force capture"
 }

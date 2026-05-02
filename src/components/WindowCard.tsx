@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Download, History } from "lucide-react";
+import { Download, History, Minimize2, Eye, EyeOff } from "lucide-react";
 import { save } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
 import { useTranslation } from "../i18n/index.tsx";
@@ -9,9 +9,12 @@ interface WindowCardProps {
   processName: string;
   imageBase64: string | undefined;
   isCapturing: boolean;
+  isMinimized: boolean;
+  forceCaptureMinimized: boolean;
   onDoubleClick: () => void;
   onHover?: (title: string | null) => void;
   onShowHistory?: (title: string) => void;
+  onToggleForceCapture?: (title: string, enabled: boolean) => void;
 }
 
 function formatTimestamp() {
@@ -41,12 +44,19 @@ export function WindowCard({
   processName,
   imageBase64,
   isCapturing,
+  isMinimized,
+  forceCaptureMinimized,
   onDoubleClick,
   onHover,
   onShowHistory,
+  onToggleForceCapture,
 }: WindowCardProps) {
   const [hovered, setHovered] = useState(false);
   const { t } = useTranslation();
+
+  if (isMinimized) {
+    console.log("[WindowCard] minimized:", title, "image:", !!imageBase64, "force:", forceCaptureMinimized);
+  }
 
   const handleSave = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -75,6 +85,11 @@ export function WindowCard({
             className="w-full h-full object-contain"
             draggable={false}
           />
+        ) : isMinimized ? (
+          <div className="flex flex-col items-center gap-2 text-content-muted">
+            <Minimize2 size={24} />
+            <span className="text-xs">{t("card.minimized")}</span>
+          </div>
         ) : isCapturing ? (
           <div className="text-content-muted text-sm">{t("card.loading")}</div>
         ) : (
@@ -90,6 +105,24 @@ export function WindowCard({
           {title}
         </span>
       </div>
+
+      {/* Force capture toggle — always visible, top-left */}
+      {onToggleForceCapture && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleForceCapture(title, !forceCaptureMinimized);
+          }}
+          className={`absolute top-2 left-2 z-20 p-1.5 rounded border transition-colors ${
+            forceCaptureMinimized
+              ? "bg-yellow-600/90 border-yellow-500 text-white"
+              : "bg-surface-alt/80 border-border text-content-muted hover:text-content hover:bg-surface"
+          }`}
+          title={t("card.forceCaptureMinimized")}
+        >
+          {forceCaptureMinimized ? <Eye size={14} /> : <EyeOff size={14} />}
+        </button>
+      )}
 
       {isCapturing && (
         <div className="absolute top-2 right-2 w-2 h-2 bg-green-500 rounded-full animate-pulse" />

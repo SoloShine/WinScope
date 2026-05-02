@@ -28,6 +28,9 @@ pub struct AppConfig {
     pub window_geometry: Option<WindowGeometry>,
     #[serde(default)]
     pub enabled_monitors: Vec<String>,
+    /// Per-window toggle: force capture minimized windows (restores them off-screen)
+    #[serde(default)]
+    pub force_capture_minimized: HashMap<String, bool>,
 }
 
 fn default_interval() -> u64 {
@@ -44,6 +47,7 @@ impl Default for AppConfig {
             always_on_top: false,
             window_geometry: None,
             enabled_monitors: Vec::new(),
+            force_capture_minimized: HashMap::new(),
         }
     }
 }

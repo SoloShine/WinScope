@@ -41,4 +41,5 @@ export interface AppConfig {
   } | null;
   max_history_entries: number;
   enabled_monitors: string[];
+  force_capture_minimized: Record<string, boolean>;
 }
