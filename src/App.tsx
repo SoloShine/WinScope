@@ -9,6 +9,7 @@ import {
   ZOOM_STEP,
 } from "./components/WindowGrid";
 import { saveImage } from "./components/WindowCard";
+import { HistoryPreview } from "./components/HistoryPreview";
 
 import { Toolbar } from "./components/Toolbar";
 import { SettingsPanel } from "./components/SettingsPanel";
@@ -29,6 +30,7 @@ function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [cardWidth, setCardWidthRaw] = useState(getSavedWidth);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showHistory, setShowHistory] = useState<string | null>(null);
   const { t } = useTranslation();
   const { theme } = useTheme();
 
@@ -233,6 +235,25 @@ function App() {
     setup();
   }, [capture.setPaused, capture.updateConfig]);
 
+  // History preview handlers
+  const handleShowHistory = useCallback((title: string) => {
+    setShowHistory(title);
+    capture.history.startViewing(title);
+  }, [capture.history.startViewing]);
+
+  const handleCloseHistory = useCallback(() => {
+    setShowHistory(null);
+    capture.history.stopViewing();
+  }, [capture.history.stopViewing]);
+
+  const handleHistoryIndexChange = useCallback((index: number) => {
+    capture.history.setIndex(index);
+  }, [capture.history.setIndex]);
+
+  const handleHistoryLive = useCallback(() => {
+    capture.history.setIndex(-1);
+  }, [capture.history.setIndex]);
+
   // Sync title bar theme
   useEffect(() => {
     invoke("set_title_bar_theme", { dark: theme === "dark" }).catch(() => {});
@@ -264,6 +285,7 @@ function App() {
           setCardWidth={setCardWidth}
           onBringToFront={capture.bringToFront}
           onCardHover={(title) => { hoveredCardRef.current = title; }}
+          onShowHistory={handleShowHistory}
         />
         {showSettings && (
           <SettingsPanel
@@ -274,6 +296,17 @@ function App() {
             onStopCapture={capture.stopCapture}
             onUpdateConfig={capture.updateConfig}
             onClose={() => setShowSettings(false)}
+          />
+        )}
+        {/* History Preview */}
+        {showHistory && (
+          <HistoryPreview
+            title={showHistory}
+            entries={capture.history.getHistory(showHistory)}
+            currentIndex={capture.history.historyIndex}
+            onIndexChange={handleHistoryIndexChange}
+            onLive={handleHistoryLive}
+            onClose={handleCloseHistory}
           />
         )}
         {/* Floating buttons */}
