@@ -17,6 +17,7 @@ import { useTheme } from "./theme.tsx";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { register, unregister } from "@tauri-apps/plugin-global-shortcut";
+import { listen } from "@tauri-apps/api/event";
 import { Maximize, Minimize, Plus, Minus, RotateCcw } from "lucide-react";
 
 function applyZoom(width: number) {
@@ -182,6 +183,55 @@ function App() {
       unregister("CommandOrControl+Shift+Space").catch(() => {});
     };
   }, [capture.setPaused]);
+
+  // Handle window close - minimize to tray instead of quitting
+  useEffect(() => {
+    const setup = async () => {
+      const win = getCurrentWebviewWindow();
+      
+      // Listen for close event
+      await win.onCloseRequested(async (event) => {
+        // Prevent default close behavior
+        event.preventDefault();
+        
+        // Minimize to tray
+        try {
+          await invoke("minimize_to_tray");
+        } catch (e) {
+          console.error("Failed to minimize to tray:", e);
+        }
+      });
+    };
+    
+    setup();
+  }, []);
+
+  // Listen for tray events
+  useEffect(() => {
+    const setup = async () => {
+      // Listen for toggle-pause event from tray
+      const unlistenPause = await listen("toggle-pause", () => {
+        capture.setPaused(!pausedRef.current);
+      });
+
+      // Listen for toggle-always-on-top event from tray
+      const unlistenTop = await listen("toggle-always-on-top", () => {
+        const cfg = configRef.current;
+        if (cfg) {
+          const newOnTop = !cfg.always_on_top;
+          getCurrentWebviewWindow().setAlwaysOnTop(newOnTop);
+          capture.updateConfig({ ...cfg, always_on_top: newOnTop });
+        }
+      });
+
+      return () => {
+        unlistenPause();
+        unlistenTop();
+      };
+    };
+    
+    setup();
+  }, [capture.setPaused, capture.updateConfig]);
 
   // Sync title bar theme
   useEffect(() => {
