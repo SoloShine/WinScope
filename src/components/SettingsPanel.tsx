@@ -1,7 +1,9 @@
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import type { WindowInfo, AppConfig } from "../types";
 import { Eye, EyeOff, X, Monitor, MonitorOff, Tag, Plus } from "lucide-react";
 import { useTranslation } from "../i18n/index.tsx";
+import { MonitorSelector } from "./MonitorSelector";
 
 interface SettingsPanelProps {
   windows: WindowInfo[];
@@ -23,6 +25,30 @@ export function SettingsPanel({
   onClose,
 }: SettingsPanelProps) {
   const { t } = useTranslation();
+
+  // Filter windows by enabled monitors
+  const filteredWindows = windows.filter((w) => {
+    if (config.enabled_monitors.length === 0) {
+      return true; // No filter applied
+    }
+    return config.enabled_monitors.includes(w.monitor_id);
+  });
+
+  // Handle monitor selection update
+  const handleMonitorUpdate = useCallback(
+    async (monitorIds: string[]) => {
+      try {
+        await invoke("update_enabled_monitors", { monitorIds });
+        onUpdateConfig({
+          ...config,
+          enabled_monitors: monitorIds,
+        });
+      } catch (e) {
+        console.error("Failed to update enabled monitors:", e);
+      }
+    },
+    [config, onUpdateConfig]
+  );
 
   const toggleHidden = (processName: string) => {
     const newConfig = { ...config };
@@ -81,7 +107,16 @@ export function SettingsPanel({
       </div>
 
       <div className="flex-1 overflow-auto">
-        {windows.map((w) => {
+        {/* Monitor Selector */}
+        <div className="px-4 py-3 border-b border-border">
+          <MonitorSelector
+            enabledMonitors={config.enabled_monitors}
+            onUpdate={handleMonitorUpdate}
+          />
+        </div>
+
+        {/* Window List */}
+        {filteredWindows.map((w) => {
           const isActive = activeCaptures.has(w.title);
           const isHidden = config.hidden_windows.includes(w.process_name);
           const windowTags = config.window_tags[w.process_name] || [];
@@ -164,7 +199,7 @@ export function SettingsPanel({
         })}
       </div>
 
-      {windows.length === 0 && (
+      {filteredWindows.length === 0 && (
         <div className="flex-1 flex items-center justify-center text-content-muted text-sm p-4">
           {t("settings.noWindows")}
         </div>
